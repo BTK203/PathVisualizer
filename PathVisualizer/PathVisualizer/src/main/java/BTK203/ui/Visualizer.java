@@ -1,0 +1,161 @@
+package BTK203.ui;
+
+import BTK203.util.Path;
+import BTK203.util.Point2D;
+import BTK203.util.Rectangle;
+import BTK203.Constants;
+import java.awt.Graphics;
+import javax.swing.JPanel;
+import java.awt.BorderLayout;
+import java.util.ArrayList;
+
+public class Visualizer extends JPanel {
+    private static final long serialVersionUID = 1L;
+    
+    private ArrayList<Path> paths;
+
+    public Visualizer() {
+        super(new BorderLayout());
+        paths = new ArrayList<Path>();
+    }
+
+    public void render(Path path) {
+        if(path.isInitalized()) {
+            paths.add(path);
+            repaint();
+        }
+    }
+
+    public void stopRendering(Path path) {
+        if(paths.contains(path)) {
+            paths.remove(path);
+            repaint();
+        }
+    }
+
+    public void paint(Graphics g) {
+        //fill in the background
+        g.setColor(Constants.SECONDARY_BACKGROUND);
+        g.fillRect(0, 0, getWidth(), getHeight());
+        g.setColor(Constants.PRIMARY_TEXT);
+
+        if(paths.size() == 0) {
+            byte[] message = new String("No Paths to Draw!").getBytes();
+            g.drawBytes(message, 0, message.length, 25, 25);
+            return;
+        }
+
+        //figure out scale of rendering (pixels per unit)
+        Rectangle bounds = getBounds(paths);
+        double xScale = (getWidth() - (3 * Constants.DEFAULT_HORIZONTAL_MARGIN)) / bounds.getWidth();
+        double yScale = (getHeight() - (3 * Constants.DEFAULT_VERTICAL_MARGIN)) / bounds.getHeight();
+        double finalScale =  (xScale < yScale ? xScale : yScale); //the final scale is the smaller of the x and y scales
+
+        for(int i=0; i<paths.size(); i++) {
+            Path path = paths.get(i);
+            if(path.isVisible()) {
+                Point2D[] points = path.getPoints();
+                g.setColor(path.getColor());
+
+                if(points.length > 1) {
+                    for(int k=1; k<points.length; k++) {
+                        Point2D p1 = points[k-1];
+                        Point2D p2 = points[k];
+                        
+                        //define locations of points in image space
+                        double 
+                            p1ImageX = ((p1.getX() - bounds.getX()) * finalScale) + Constants.DEFAULT_HORIZONTAL_MARGIN,
+                            p1ImageY = ((p1.getY() - bounds.getY()) * finalScale) + Constants.DEFAULT_VERTICAL_MARGIN,
+                            p2ImageX = ((p2.getX() - bounds.getX()) * finalScale) + Constants.DEFAULT_HORIZONTAL_MARGIN,
+                            p2ImageY = ((p2.getY() - bounds.getY()) * finalScale) + Constants.DEFAULT_VERTICAL_MARGIN;
+
+                        g.drawLine((int) p1ImageX, (int) p1ImageY, (int) p2ImageX, (int) p2ImageY);
+
+                        //highlight points with a filled circle
+                        int pointHighLightX = (int) p2ImageX - (Constants.POINT_MARK_DIAMETER / 2);
+                        int pointHighLightY = (int) p2ImageY - (Constants.POINT_MARK_DIAMETER / 2);
+                        g.fillOval(pointHighLightX, pointHighLightY, Constants.POINT_MARK_DIAMETER, Constants.POINT_MARK_DIAMETER);
+                    }
+                }
+
+                //mark start point with special dot
+                g.setColor(Constants.START_POINT_COLOR);
+                int startMarkX = (int) ((points[0].getX() - bounds.getX()) * finalScale) + Constants.DEFAULT_HORIZONTAL_MARGIN;
+                int startMarkY = (int) ((points[0].getY() - bounds.getY()) * finalScale) + Constants.DEFAULT_VERTICAL_MARGIN;
+                int endpointRadius = Constants.ENDPOINT_MARK_DIAMETER / 2;
+                startMarkX -= endpointRadius;
+                startMarkY -= endpointRadius;
+                g.fillOval(startMarkX, startMarkY, Constants.ENDPOINT_MARK_DIAMETER, Constants.ENDPOINT_MARK_DIAMETER);
+
+                //mark end point with special dot
+                g.setColor(Constants.END_POINT_COLOR);
+                int endMarkX = (int) ((points[points.length - 1].getX() - bounds.getX()) * finalScale) + Constants.DEFAULT_HORIZONTAL_MARGIN;
+                int endMarkY = (int) ((points[points.length - 1].getY() - bounds.getY()) * finalScale) + Constants.DEFAULT_VERTICAL_MARGIN;
+                endMarkX -= endpointRadius;
+                endMarkY -= endpointRadius;
+                g.fillOval(endMarkX, endMarkY, Constants.ENDPOINT_MARK_DIAMETER, Constants.ENDPOINT_MARK_DIAMETER);
+            }
+        }
+    }
+
+    /**
+     * Sets whether or not a Path is visible.
+     * @param path The path to set visibility of.
+     * @param visible True if the path is visible, false otherwise.
+     */
+    public void setPathVisible(Path path, boolean visible) {
+        for(int i=0; i<paths.size(); i++) {
+            if(paths.get(i).equals(path)) {
+                paths.get(i).setVisible(visible);
+                repaint();
+            }
+        }
+    }
+
+    /**
+     * Returns a Rectangle that denotes the bounds of the passed paths
+     * @param paths A list of paths.
+     * @return A bounding rectangle that fits all points in paths.
+     */
+    private Rectangle getBounds(ArrayList<Path> paths) {
+        double
+            smallestX = Double.MAX_VALUE,
+            greatestX = Double.MIN_VALUE,
+            smallestY = Double.MAX_VALUE,
+            greatestY = Double.MIN_VALUE;
+
+        for(int i=0; i<paths.size(); i++) {
+            if(paths.get(i).isVisible()) {
+                Point2D[] points = paths.get(i).getPoints();
+                for(int k=0; k<points.length; k++) {
+                    double
+                        x = points[k].getX(),
+                        y = points[k].getY();
+
+                    if(x < smallestX) {
+                        smallestX = x;
+                    }
+
+                    if(x > greatestX) {
+                        greatestX = x;
+                    }
+
+                    if(y < smallestY) {
+                        smallestY = y;
+                    }
+
+                    if(y > greatestY) {
+                        greatestY = y;
+                    }
+                }
+            }
+        }
+
+        //figure out the width and height and return
+        double 
+            width  = greatestX - smallestX,
+            height = greatestY - smallestY;
+
+        return new Rectangle(smallestX, smallestY, width, height);
+    }
+}
