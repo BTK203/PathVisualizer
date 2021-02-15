@@ -5,14 +5,15 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
-
 import com.sun.java.swing.plaf.windows.WindowsLookAndFeel;
-
 import BTK203.App;
 import BTK203.Constants;
+import BTK203.util.IRenderable;
 import BTK203.util.Path;
-
+import BTK203.util.Point2D;
+import BTK203.util.Position;
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowAdapter;
 import java.io.File;
@@ -26,12 +27,16 @@ public class PathVisualizerGUI extends JFrame {
     private Visualizer visualizer;
     private Ribbon ribbon;
     private PathManifest manifest;
+    private Position robotPosition;
+    private boolean robotPositionInitalized;
 
     /**
      * Creates a new PathVisualizerGUI
      */
     public PathVisualizerGUI() {
         super("PathVisualizer");
+        robotPosition = new Position(new Point2D(0, 0, 0), new Color(0, 0, 0));
+        robotPositionInitalized = false;
         System.out.println("Building UI...");
 
         //make the app look like those nice and easy to use windows apps.
@@ -97,12 +102,29 @@ public class PathVisualizerGUI extends JFrame {
 
             if(!manifest.widgetExists(pathName)) {
                 Path newPath = new Path(pathString, Path.getNextColor());
-
-                //render the path on the visualizer and add to the manifest
-                visualizer.render(newPath);
-                manifest.addWidget(new PathWidget(newPath, pathName));
+                if(newPath.isValid()) {
+                    //render the path on the visualizer and add to the manifest
+                    visualizer.render(newPath);
+                    manifest.addWidget(new RenderableWidget(newPath, pathName));
+                }
             }
         }
+    }
+
+    /**
+     * Updates the robot position on the Visualizer.
+     * @param newPosition The position to render.
+     */
+    public void updateRobotPosition(Point2D newPosition) {
+        if(!robotPositionInitalized) {
+            robotPosition = new Position(newPosition, Constants.ROBOT_POSITION_COLOR);
+            visualizer.render(robotPosition);
+            manifest.addWidget(new RenderableWidget(robotPosition, Constants.ROBOT_POSITION_NAME));
+            robotPositionInitalized = true;
+        }
+
+        robotPosition.setPosition(newPosition);
+        visualizer.repaint();
     }
 
     /**
@@ -110,7 +132,7 @@ public class PathVisualizerGUI extends JFrame {
      * @param path the path to change.
      * @param visible True if the path should be visible, false otherwise.
      */
-    public void setPathVisible(Path path, boolean visible) {
+    public void setPathVisible(IRenderable path, boolean visible) {
         visualizer.setPathVisible(path, visible);
     }
 
@@ -118,18 +140,18 @@ public class PathVisualizerGUI extends JFrame {
      * Deletes a path.
      * @param path Path to delete.
      */
-    public void deletePath(Path path) {
+    public void deletePath(IRenderable path) {
         visualizer.stopRendering(path);
         manifest.removeWidgetByPath(path);
     }
 
     /**
      * Updates the status of the socket widget.
-     * @param datagramConnected True if the datagram is connected, false otherwise.
-     * @param streamConnected True if the stream is connected, false otherwise.
+     * @param socketConnecting True if the datagram is connected, false otherwise.
+     * @param socketInitalized True if the stream is connected, false otherwise.
      */
-    public void updateSocketStatus(boolean datagramConnected, boolean streamConnected) {
-        ribbon.setSocketStatus(datagramConnected, streamConnected);
+    public void updateSocketStatus(boolean socketConnecting, boolean socketInitalized) {
+        ribbon.setSocketStatus(socketConnecting, socketInitalized);
     }
 
     /**

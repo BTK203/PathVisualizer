@@ -9,7 +9,9 @@ import java.util.Timer;
 import java.util.TimerTask;
 import BTK203.comm.SocketHelper;
 import BTK203.ui.PathVisualizerGUI;
+import BTK203.util.IRenderable;
 import BTK203.util.Path;
+import BTK203.util.Point2D;
 
 /**
  * This class' only job is basically to sit in a chair and pass method calls
@@ -79,7 +81,7 @@ public class PathVisualizerManager {
      * @param path The path to change.
      * @param visible True if the path should be visible, false otherwise.
      */
-    public void setPathVisible(Path path, boolean visible) {
+    public void setPathVisible(IRenderable path, boolean visible) {
         gui.setPathVisible(path, visible);
     }
 
@@ -87,7 +89,7 @@ public class PathVisualizerManager {
      * Deletes a path.
      * @param path The path to delete.
      */
-    public void deletePath(Path path) {
+    public void deletePath(IRenderable path) {
         gui.deletePath(path);
     }
     
@@ -99,13 +101,20 @@ public class PathVisualizerManager {
     }
 
     /**
+     * Updates the robot's position on the Visualizer.
+     */
+    public void updateRobotPosition(Point2D newPosition) {
+        gui.updateRobotPosition(newPosition);
+    }
+
+    /**
      * Gets the desired address and port of the socket, and applies it.
      */
     public void connectSocket() {
         String address = gui.getDesiredIPAddress();
         int    port    = gui.getDesiredPort();
 
-        socketHelper.startSearchOn(address, port);
+        socketHelper.startConnectingTo(address, port);
 
         //set preference so that the address is reloaded the next time the app is launched
         setPreference("defaultIPAddress", address);
@@ -171,6 +180,6 @@ public class PathVisualizerManager {
      */
     private void update() {
         socketHelper.update();
-        gui.updateSocketStatus(socketHelper.isDatagramSocketConnected(), socketHelper.isStreamSocketConnected());
+        gui.updateSocketStatus(socketHelper.getConnecting(), socketHelper.getInitalizedAndConnected());
     }
 }

@@ -1,7 +1,5 @@
 package BTK203;
 
-import BTK203.util.Util;
-
 /**
  * Hello world!
  */

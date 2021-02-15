@@ -1,34 +1,37 @@
 package BTK203.ui;
 
+import BTK203.util.IRenderable;
 import BTK203.util.Path;
 import BTK203.util.Point2D;
+import BTK203.util.Position;
 import BTK203.util.Rectangle;
 import BTK203.Constants;
 import java.awt.Graphics;
 import javax.swing.JPanel;
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.util.ArrayList;
 
 public class Visualizer extends JPanel {
     private static final long serialVersionUID = 1L;
     
-    private ArrayList<Path> paths;
+    private ArrayList<IRenderable> renderables;
 
     public Visualizer() {
         super(new BorderLayout());
-        paths = new ArrayList<Path>();
+        renderables = new ArrayList<IRenderable>();
     }
 
-    public void render(Path path) {
-        if(path.isInitalized()) {
-            paths.add(path);
+    public void render(IRenderable renderable) {
+        if(renderable.isValid()) {
+            renderables.add(renderable);
             repaint();
         }
     }
 
-    public void stopRendering(Path path) {
-        if(paths.contains(path)) {
-            paths.remove(path);
+    public void stopRendering(IRenderable renderable) {
+        if(renderables.contains(renderable)) {
+            renderables.remove(renderable);
             repaint();
         }
     }
@@ -39,23 +42,23 @@ public class Visualizer extends JPanel {
         g.fillRect(0, 0, getWidth(), getHeight());
         g.setColor(Constants.PRIMARY_TEXT);
 
-        if(paths.size() == 0) {
-            byte[] message = new String("No Paths to Draw!").getBytes();
+        if(renderables.size() == 0) {
+            byte[] message = new String("Nothing to Draw!").getBytes();
             g.drawBytes(message, 0, message.length, 25, 25);
             return;
         }
 
         //figure out scale of rendering (pixels per unit)
-        Rectangle bounds = getBounds(paths);
+        Rectangle bounds = getBounds(renderables);
         double xScale = (getWidth() - (3 * Constants.DEFAULT_HORIZONTAL_MARGIN)) / bounds.getWidth();
         double yScale = (getHeight() - (3 * Constants.DEFAULT_VERTICAL_MARGIN)) / bounds.getHeight();
         double finalScale =  (xScale < yScale ? xScale : yScale); //the final scale is the smaller of the x and y scales
 
-        for(int i=0; i<paths.size(); i++) {
-            Path path = paths.get(i);
-            if(path.isVisible()) {
-                Point2D[] points = path.getPoints();
-                g.setColor(path.getColor());
+        for(int i=0; i<renderables.size(); i++) {
+            IRenderable renderable = renderables.get(i);
+            if(renderable.isVisible()) {
+                Point2D[] points = renderable.getPoints();
+                g.setColor(renderable.getColor());
 
                 if(points.length > 1) {
                     for(int k=1; k<points.length; k++) {
@@ -76,24 +79,34 @@ public class Visualizer extends JPanel {
                         int pointHighLightY = (int) p2ImageY - (Constants.POINT_MARK_DIAMETER / 2);
                         g.fillOval(pointHighLightX, pointHighLightY, Constants.POINT_MARK_DIAMETER, Constants.POINT_MARK_DIAMETER);
                     }
+
+                    //mark start point with special dot
+                    g.setColor(Constants.START_POINT_COLOR);
+                    int startMarkX = (int) ((points[0].getX() - bounds.getX()) * finalScale) + Constants.DEFAULT_HORIZONTAL_MARGIN;
+                    int startMarkY = (int) ((points[0].getY() - bounds.getY()) * finalScale) + Constants.DEFAULT_VERTICAL_MARGIN;
+                    int endpointRadius = Constants.ENDPOINT_MARK_DIAMETER / 2;
+                    startMarkX -= endpointRadius;
+                    startMarkY -= endpointRadius;
+                    g.fillOval(startMarkX, startMarkY, Constants.ENDPOINT_MARK_DIAMETER, Constants.ENDPOINT_MARK_DIAMETER);
+
+                    //mark end point with special dot
+                    g.setColor(Constants.END_POINT_COLOR);
+                    int endMarkX = (int) ((points[points.length - 1].getX() - bounds.getX()) * finalScale) + Constants.DEFAULT_HORIZONTAL_MARGIN;
+                    int endMarkY = (int) ((points[points.length - 1].getY() - bounds.getY()) * finalScale) + Constants.DEFAULT_VERTICAL_MARGIN;
+                    endMarkX -= endpointRadius;
+                    endMarkY -= endpointRadius;
+                    g.fillOval(endMarkX, endMarkY, Constants.ENDPOINT_MARK_DIAMETER, Constants.ENDPOINT_MARK_DIAMETER);
+                } else if(points.length == 1) {
+                    int 
+                        standalonePointRadius = Constants.STANDALONE_POINT_DIAMETER / 2,
+                        pointX = (int) ((points[0].getX() - bounds.getX()) * finalScale) + Constants.DEFAULT_HORIZONTAL_MARGIN,
+                        pointY = (int) ((points[0].getY() - bounds.getY()) * finalScale) + Constants.DEFAULT_VERTICAL_MARGIN;
+
+                    pointX -= standalonePointRadius;
+                    pointY -= standalonePointRadius;
+                    
+                    g.fillOval(pointX, pointY, Constants.STANDALONE_POINT_DIAMETER, Constants.STANDALONE_POINT_DIAMETER);
                 }
-
-                //mark start point with special dot
-                g.setColor(Constants.START_POINT_COLOR);
-                int startMarkX = (int) ((points[0].getX() - bounds.getX()) * finalScale) + Constants.DEFAULT_HORIZONTAL_MARGIN;
-                int startMarkY = (int) ((points[0].getY() - bounds.getY()) * finalScale) + Constants.DEFAULT_VERTICAL_MARGIN;
-                int endpointRadius = Constants.ENDPOINT_MARK_DIAMETER / 2;
-                startMarkX -= endpointRadius;
-                startMarkY -= endpointRadius;
-                g.fillOval(startMarkX, startMarkY, Constants.ENDPOINT_MARK_DIAMETER, Constants.ENDPOINT_MARK_DIAMETER);
-
-                //mark end point with special dot
-                g.setColor(Constants.END_POINT_COLOR);
-                int endMarkX = (int) ((points[points.length - 1].getX() - bounds.getX()) * finalScale) + Constants.DEFAULT_HORIZONTAL_MARGIN;
-                int endMarkY = (int) ((points[points.length - 1].getY() - bounds.getY()) * finalScale) + Constants.DEFAULT_VERTICAL_MARGIN;
-                endMarkX -= endpointRadius;
-                endMarkY -= endpointRadius;
-                g.fillOval(endMarkX, endMarkY, Constants.ENDPOINT_MARK_DIAMETER, Constants.ENDPOINT_MARK_DIAMETER);
             }
         }
     }
@@ -103,10 +116,10 @@ public class Visualizer extends JPanel {
      * @param path The path to set visibility of.
      * @param visible True if the path is visible, false otherwise.
      */
-    public void setPathVisible(Path path, boolean visible) {
-        for(int i=0; i<paths.size(); i++) {
-            if(paths.get(i).equals(path)) {
-                paths.get(i).setVisible(visible);
+    public void setPathVisible(IRenderable path, boolean visible) {
+        for(int i=0; i<renderables.size(); i++) {
+            if(renderables.get(i).equals(path)) {
+                renderables.get(i).setVisible(visible);
                 repaint();
             }
         }
@@ -114,19 +127,19 @@ public class Visualizer extends JPanel {
 
     /**
      * Returns a Rectangle that denotes the bounds of the passed paths
-     * @param paths A list of paths.
+     * @param renderables A list of paths.
      * @return A bounding rectangle that fits all points in paths.
      */
-    private Rectangle getBounds(ArrayList<Path> paths) {
+    private Rectangle getBounds(ArrayList<IRenderable> renderables) {
         double
             smallestX = Double.MAX_VALUE,
             greatestX = Double.MIN_VALUE,
             smallestY = Double.MAX_VALUE,
             greatestY = Double.MIN_VALUE;
 
-        for(int i=0; i<paths.size(); i++) {
-            if(paths.get(i).isVisible()) {
-                Point2D[] points = paths.get(i).getPoints();
+        for(int i=0; i<renderables.size(); i++) {
+            if(renderables.get(i).isVisible()) {
+                Point2D[] points = renderables.get(i).getPoints();
                 for(int k=0; k<points.length; k++) {
                     double
                         x = points[k].getX(),

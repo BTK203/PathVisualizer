@@ -10,18 +10,18 @@ import java.awt.Color;
 /**
  * Represents a Path that can be rendered on the screen.
  */
-public class Path {
+public class Path implements IRenderable {
     private static float currentHue = 0;
 
     private Point2D[] points;
     private Color color;
     private boolean
-        initalized,
+        valid,
         visible;
 
     public Path(String file, Color color) {
         this.color = color;
-        this.initalized = false;
+        this.valid = false;
         this.visible = true;
         try {
             String fileContents = Files.readString(java.nio.file.Path.of(file));
@@ -31,7 +31,7 @@ public class Path {
                 points[i] = Point2D.fromString(pointStrings[i]);
             }
 
-            initalized = true;
+            valid = true;
         } catch (IOException ex) {
             ex.printStackTrace();
         } catch (NumberFormatException ex) {
@@ -49,8 +49,8 @@ public class Path {
     /**
      * Returns true if this Path was initalized correctly, false otherwise.
      */
-    public boolean isInitalized() {
-        return initalized;
+    public boolean isValid() {
+        return valid;
     }
 
     /**

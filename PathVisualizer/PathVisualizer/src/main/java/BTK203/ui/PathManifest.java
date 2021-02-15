@@ -5,6 +5,7 @@ import javax.swing.BoxLayout;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import BTK203.Constants;
+import BTK203.util.IRenderable;
 import BTK203.util.Path;
 import BTK203.util.Util;
 
@@ -14,7 +15,7 @@ import BTK203.util.Util;
 public class PathManifest extends JPanel {
     private static final long serialVersionUID = 1L;
 
-    private ArrayList<PathWidget> widgets;
+    private ArrayList<RenderableWidget> widgets;
 
     /**
      * Creates a new PathManifest.
@@ -23,7 +24,7 @@ public class PathManifest extends JPanel {
         super();
         setPreferredSize(Constants.DEFAULT_MANIFEST_SIZE);
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
-        widgets = new ArrayList<PathWidget>();
+        widgets = new ArrayList<RenderableWidget>();
 
         JLabel header = Util.boldify(new JLabel("Paths"));
         add(header);
@@ -33,7 +34,7 @@ public class PathManifest extends JPanel {
      * Adds a PathWidget to the list being displayed.
      * @param widget The widget to add.
      */
-    public void addWidget(PathWidget widget) {
+    public void addWidget(RenderableWidget widget) {
         widgets.add(widget);
         add(widget);
 
@@ -44,7 +45,7 @@ public class PathManifest extends JPanel {
      * removes a PathWidget from the list being displayed
      * @param widget The widget to remove.
      */
-    public void removeWidget(PathWidget widget) {
+    public void removeWidget(RenderableWidget widget) {
         if(widgets.contains(widget)) {
             widgets.remove(widget);
             remove(widget);
@@ -56,9 +57,9 @@ public class PathManifest extends JPanel {
      * Removes a PathWidget by name.
      * @param name The name of the widget to delete.
      */
-    public void removeWidgetByPath(Path path) {
+    public void removeWidgetByPath(IRenderable path) {
         for(int i=0; i<widgets.size(); i++) {
-            if(widgets.get(i).getPath().equals(path)) {
+            if(widgets.get(i).getRenderable().equals(path)) {
                 removeWidget(widgets.get(i));
             }
         }

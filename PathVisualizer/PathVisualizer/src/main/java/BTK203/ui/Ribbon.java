@@ -94,11 +94,11 @@ public class Ribbon extends JPanel {
 
     /**
      * Sets the look of the socket status widget
-     * @param datagramConnected True if the socket is bound, false otherwise.
-     * @param streamConnected True if the socket is connected, false otherwise.
+     * @param socketConnecting True if the socket is bound, false otherwise.
+     * @param socketInitalized True if the socket is connected, false otherwise.
      */
-    public void setSocketStatus(boolean datagramConnected, boolean streamConnected) {
-        socketStatus.update(datagramConnected, streamConnected);
+    public void setSocketStatus(boolean socketConnecting, boolean socketInitalized) {
+        socketStatus.update(socketConnecting, socketInitalized);
     }
 
     /**

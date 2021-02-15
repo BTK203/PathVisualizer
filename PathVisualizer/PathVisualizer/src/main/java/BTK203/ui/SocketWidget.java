@@ -13,9 +13,9 @@ import java.awt.BorderLayout;
 public class SocketWidget extends JPanel {
     private static final long serialVersionUID = 1L;
     private static final String
-        DATAGRAM_NOT_CONNECTED = "Status: Not Connected!",
-        DATAGRAM_CONNECTED = "Status: Searching...",
-        STREAM_CONNECTED     = "Status: Connected";
+        SOCKET_NOT_CONNECTING = "Status: Not Connected!",
+        SOCKET_CONNECTING     = "Status: Searching...",
+        SOCKET_INITALIZED     = "Status: Connected";
 
     private JLabel statusLabel;
 
@@ -24,7 +24,7 @@ public class SocketWidget extends JPanel {
         setLayout(new BorderLayout());
         setBackground(Constants.ERROR_RED_COLOR);
 
-        statusLabel = new JLabel(DATAGRAM_NOT_CONNECTED);
+        statusLabel = new JLabel(SOCKET_NOT_CONNECTING);
         add(statusLabel, BorderLayout.CENTER);
     }
 
@@ -33,16 +33,16 @@ public class SocketWidget extends JPanel {
      * @param bound True if the socket is bound, false otherwise.
      * @param connected True if the socket is connected, false otherwise.
      */
-    public void update(boolean datagramConnected, boolean streamConnected) {
-        if(!datagramConnected) { //unbound, unconnected
+    public void update(boolean socketConnecting, boolean socketInitalized) {
+        if(!(socketConnecting || socketInitalized)) { //unbound, unconnected
             setBackground(Constants.ERROR_RED_COLOR);
-            statusLabel.setText(DATAGRAM_NOT_CONNECTED);
-        } else if(datagramConnected && !streamConnected) {
+            statusLabel.setText(SOCKET_NOT_CONNECTING);
+        } else if(socketConnecting && !socketInitalized) {
             setBackground(Constants.WARNING_YELLOW_COLOR);
-            statusLabel.setText(DATAGRAM_CONNECTED);
-        } else if(datagramConnected && streamConnected) {
+            statusLabel.setText(SOCKET_CONNECTING);
+        } else if(socketInitalized) {
             setBackground(Constants.GOOD_GREEN_COLOR);
-            statusLabel.setText(STREAM_CONNECTED);
+            statusLabel.setText(SOCKET_INITALIZED);
         }
     }
 }

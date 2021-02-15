@@ -1,136 +1,145 @@
 package BTK203.comm;
 
 import java.io.IOException;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
+import java.net.ConnectException;
 import java.net.InetAddress;
+import java.net.NoRouteToHostException;
 import java.net.Socket;
 import java.net.SocketException;
+import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
+import java.util.NoSuchElementException;
+import java.util.Scanner;
+import java.util.regex.PatternSyntaxException;
 
+import BTK203.App;
 import BTK203.Constants;
+import BTK203.util.Point2D;
 
 /**
- * The utility that handles all communication with the robot.
+ * A utility that deals with all communication with the robot.
  */
 public class SocketHelper {
-    private DatagramSocket datagramSocket; //used to search for the robot and alert it of our address.
-    private Socket streamSocket; //used to transfer path files and other data
+    private Socket socket;
+    private String address;
+    private int port;
     private boolean
-        initalized,
-        streamInitalized;
-    private long lastPingTime;
+        connecting,
+        initalized;
+
+    private String currentData;
 
     /**
-     * Creates a new SocketHelper. Uses the preferences to set the IP Address and port.
+     * Creates a new SocketHelper trying to connect to address and port.
+     * @param address The ipv4 address of the robot.
+     * @param port The port to connect on.
      */
-    public SocketHelper(String defaultAddress, int defaultPort) {
-        initalized = false;
-        streamInitalized = false;
-        lastPingTime = System.currentTimeMillis();
-
-        try {
-            datagramSocket = new DatagramSocket(defaultPort);
-            datagramSocket.connect(InetAddress.getByName(defaultAddress), defaultPort);
-            initalized = true;
-        } catch(SocketException ex) {
-            printSocketExceptionMessage(ex);
-        } catch(UnknownHostException ex) {
-            printUnknownHostExceptionMessage(ex, defaultAddress);
-        }
-
-        new Thread(() -> {
-            try {
-                streamSocket = new Socket(InetAddress.getByName(defaultAddress), defaultPort + 1);
-                streamInitalized = true;
-            } catch(UnknownHostException ex) {
-                printUnknownHostExceptionMessage(ex, defaultAddress);
-            } catch(IOException ex) {
-                printIOExceptionMessage(ex);
-            }
-            
-        }).start();
+    public SocketHelper(String address, int port) {
+        startConnectingTo(address, port);
+        currentData = "";
     }
 
     /**
      * Updates the SocketHelper.
-     * This method will check for messages from the robot and handle them as necessary.
      */
     public void update() {
-        if(isStreamSocketConnected()) {
-            System.out.println("this is epic bro");
-        } else {
-            if(isInitalized()) {
-                //ping robot to alert it of our address. Ping once every Constants.PING_RATE ms.
-                long currentTime = System.currentTimeMillis();
-                if(currentTime - lastPingTime > Constants.PING_RATE) {
-                    try {
-                        //send message to robot containing our IP Address, so robot can connect to our stream socket.
-                        String discoveryMessage = "Robot?" + InetAddress.getLocalHost().getHostAddress() + ";";
-                        System.out.println(discoveryMessage);
-                        byte[] messageBytes = discoveryMessage.getBytes();
-                        DatagramPacket packet = new DatagramPacket(messageBytes, messageBytes.length);
-                        datagramSocket.send(packet);
-                        lastPingTime = currentTime;
-                    } catch(UnknownHostException ex) {
-                        printUnknownHostExceptionMessage(ex, "localhost");
-                    } catch(IOException ex) {
-                        printIOExceptionMessage(ex);
+        if(getInitalizedAndConnected()) {
+            try {
+                //add previously received data to currentData.
+                byte[] buffer = new byte[Constants.SOCKET_BUFFER_SIZE];
+                socket.getInputStream().read(buffer);
+                currentData += new String(buffer);
+
+                //parse data and look for messages.
+                //messages formatted as such: "([subject]:[message])"
+                int lastCloseParen = currentData.lastIndexOf(")");
+                int lastOpenParen = currentData.lastIndexOf("(", lastCloseParen);
+                if(lastCloseParen > -1 && lastOpenParen > -1) {
+                    String relavantData = currentData.substring(lastOpenParen, lastCloseParen);
+                    currentData = currentData.substring(lastCloseParen + 1);
+
+                    String[] completedMessages = relavantData.split("\\)");
+                    for(int i=0; i<completedMessages.length; i++) {
+                        String completedMessage = completedMessages[i];
+                        if(completedMessage.contains(":")) { //now it is defintely a full message
+                            String[] segments = completedMessage.split(":");
+                            String subject = segments[0];
+                            String message = segments[1];
+
+                            if(subject.startsWith("(")) {
+                                subject = subject.substring(1); //substring off "("
+                            }
+
+                            if(subject.equals("Pos")) { //robot is declaring a change in position. The "message" part of the message will be the point.
+                                Point2D newRobotPosition = Point2D.fromString(message);
+                                App.getManager().updateRobotPosition(newRobotPosition);
+                            }
+                        }
                     }
                 }
+            } catch(SocketTimeoutException ex) { //to stop if from printing a stack trace every time the read times out
+            } catch(IOException ex) {
+                printIOExceptionMessage(ex);
             }
         }
     }
 
     /**
-     * Starts searching for a robot on a new network address and port.
-     * So long as update() is called periodically, stream socket will automatically connect when the robot is found.
-     * @param address The new ipv4 address.
-     * @param port The new port.
+     * Starts trying to connect the socket to the given address and port.
+     * @param address The new ipv4 address to connect to.
+     * @param port The new port to connect on.
      */
-    public void startSearchOn(String address, int port) {
-        if(isInitalized()) {
-            datagramSocket.close(); //close to prevent resource leaks.
-        }
-
-        try {
-            datagramSocket = new DatagramSocket(port);
-            datagramSocket.connect(InetAddress.getByName(address), port);
-        } catch(SocketException ex) {
-            printSocketExceptionMessage(ex);
-        } catch(UnknownHostException ex) {
-            printUnknownHostExceptionMessage(ex, address);
-        }
+    public void startConnectingTo(String address, int port) {
+        this.address = address;
+        this.port = port;
+        attemptToConnectSocket();
     }
 
     /**
-     * Returns true if the datagram socket is initalized, and false otherwise.
-     * This method does not bother to look at the stream socket because it relies on the datagram to connect.
+     * Returns whether or not the Socket is actively trying to connect.
+     * @return true if the socket is connecting, false otherwise.
      */
-    public boolean isInitalized() {
-        return initalized;
+    public boolean getConnecting() {
+        return connecting;
     }
 
     /**
-     * Returns true if the socket is bound to the computer, and false otherwise.
+     * Returns whether or not the socket is fully initalized, including connected.
+     * @return true if the socket is initalized, false otherwise.
      */
-    public boolean isDatagramSocketConnected() {
-        if(isInitalized()) {
-            return datagramSocket.isConnected();
+    public boolean getInitalizedAndConnected() {
+        if(initalized && !connecting) {
+            return socket.isConnected();
         }
 
         return false;
     }
 
     /**
-     * Returns true if the socket is connected to the robot, and false otherwise.
+     * Tries to connect the socket to the robot in a separate thread, and keeps trying even when it times out.
      */
-    public boolean isStreamSocketConnected() {
-        if(isInitalized() && streamInitalized) {
-            return streamSocket.isConnected();
-        }
+    private void attemptToConnectSocket() {
+        initalized = false;
+        this.connecting = true;
+        new Thread(() -> {
+            while(true) {
+                try {
+                    socket = new Socket(InetAddress.getByName(address), port);
+                    socket.setSoTimeout(Constants.SOCKET_TIMEOUT);
+                    initalized = true;
+                    break;
+                } catch(UnknownHostException ex) {
+                    printUnknownHostExceptionMessage(ex, address);
+                } catch(ConnectException ex) {       //connection timed out.
+                } catch(NoRouteToHostException ex) { //not on a network. We don't care about this one because we want it to connect as soon as it is able.
+                } catch(IOException ex) {
+                    printIOExceptionMessage(ex);
+                    break;
+                }
+            }
 
-        return false;
+            connecting = false;
+        }).start();
     }
 
     /**

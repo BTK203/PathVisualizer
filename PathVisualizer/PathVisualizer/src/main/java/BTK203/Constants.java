@@ -13,10 +13,11 @@ public class Constants {
         COLOR_SAMPLE_SIZE     = new Dimension(18, 18);
 
     public static final int
-        DEFAULT_HORIZONTAL_MARGIN = 5,
-        DEFAULT_VERTICAL_MARGIN   = 5,
+        DEFAULT_HORIZONTAL_MARGIN = 8,
+        DEFAULT_VERTICAL_MARGIN   = 8,
         POINT_MARK_DIAMETER       = 5,
-        ENDPOINT_MARK_DIAMETER    = 10;
+        ENDPOINT_MARK_DIAMETER    = 10,
+        STANDALONE_POINT_DIAMETER = 14;
 
     /**
      * Color Constants
@@ -28,7 +29,8 @@ public class Constants {
         END_POINT_COLOR      = new Color(200, 20, 20),
         ERROR_RED_COLOR      = new Color(255, 50, 50),
         WARNING_YELLOW_COLOR = new Color(255, 255, 50),
-        GOOD_GREEN_COLOR     = new Color(50, 50, 255);
+        GOOD_GREEN_COLOR     = new Color(50, 255, 50),
+        ROBOT_POSITION_COLOR = new Color(0, 0, 0);
 
     public static final float
         NEXTCOLOR_HUE_INCREMENT = 1 / 6f,
@@ -47,4 +49,17 @@ public class Constants {
     public static final long
         UPDATE_RATE = 50, //50 ms or 20 hz
         PING_RATE = 500;
+
+    /**
+     * Socket constants
+     */
+    public static final int
+        SOCKET_TIMEOUT = 20,
+        SOCKET_BUFFER_SIZE = 128000; //128 kB
+
+    /**
+     * Other constants
+     */
+    public static final String
+        ROBOT_POSITION_NAME = "Robot Position";
 }
