@@ -2,6 +2,17 @@ package BTK203;
 
 public class Util {
     /**
+     * Rounds a number to n places.
+     * @param number The number to round.
+     */
+    public static double roundTo(double number, int places) {
+        int multiplier = (int) Math.pow(10, places);
+        double expanded = number * multiplier;
+        double rounded = (int) expanded;
+        return rounded / (double) multiplier;
+    }
+
+    /**
      * Tests a number to see if it is between two bounds inclusively.
      * @param num The number to check.
      * @param lowerBound The lowest that the number is allowed to be.
