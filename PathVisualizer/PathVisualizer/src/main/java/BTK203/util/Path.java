@@ -19,6 +19,11 @@ public class Path implements IRenderable {
         valid,
         visible;
 
+    /**
+     * Creates a new path from the given file path.
+     * @param file The path to the file to read from.
+     * @param color The color of the path.
+     */
     public Path(String file, Color color) {
         this.color = color;
         this.valid = false;
@@ -37,6 +42,18 @@ public class Path implements IRenderable {
         } catch (NumberFormatException ex) {
             System.out.println("Invalid File!");
         }
+    }
+
+    /**
+     * Creates a new Path.
+     * @param points An array of points describing the path.
+     * @param color The color of the path.
+     */
+    public Path(Point2D[] points, Color color) {
+        this.points = points;
+        this.color = color;
+        this.valid = true;
+        this.visible = true;
     }
 
     /**
