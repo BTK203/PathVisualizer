@@ -5,6 +5,8 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
 import java.net.UnknownHostException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 /**
  * A utility that assists with handling PathVisualizer data from the computer
@@ -31,6 +33,9 @@ public class ServerSocketHelper {
         }
     }
 
+    /**
+     * This method only here to test if the client can handle multiple messages and still be able to handle all of them.
+     */
     public void update() {
         String message = composeMessage("Pos", robotPosition.toString());
 
@@ -47,6 +52,17 @@ public class ServerSocketHelper {
 
     public Point2D getRobotPosition() {
         return robotPosition;
+    }
+
+    public void transferPathFile(String filePath, String name) {
+        try {
+            String contents = Files.readString(Path.of(filePath));
+            String message = composeMessage("Path-" + name, contents);
+            System.out.println("transferring " + message);
+            clientSocket.getOutputStream().write(message.getBytes());
+        } catch(IOException ex) {
+            printIOExceptionMessage(ex);
+        }
     }
 
     private String composeMessage(String subject, String message) {

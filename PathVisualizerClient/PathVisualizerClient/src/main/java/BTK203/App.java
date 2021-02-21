@@ -47,6 +47,11 @@ public final class App {
 
             if(action.equals("2")) {
                 System.out.println("transfer path");
+                System.out.println("File Path: ");
+                String path = scanner.nextLine();
+                System.out.println("Path name: ");
+                String name = scanner.nextLine();
+                helper.transferPathFile(path, name);
                 continue;
             }
 
