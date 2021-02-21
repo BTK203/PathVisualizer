@@ -21,6 +21,7 @@ public class PathVisualizerManager {
     private PathVisualizerGUI gui;
     private SocketHelper socketHelper;
     private HashMap<String, String> preferences;
+    private HashMap<String, Integer> names;
 
     /**
      * Initalizes all needed components of the program.
@@ -29,6 +30,8 @@ public class PathVisualizerManager {
         gui = new PathVisualizerGUI();
         preferences = new HashMap<String, String>();
         readPreferences();
+
+        names = new HashMap<String, Integer>();
 
         //resolve default IP address and port. Keep this section of code below the call to readPreferences().
         String defaultIPAddress = getPreference("defaultIPAddress", "10.36.95.2");
@@ -107,6 +110,11 @@ public class PathVisualizerManager {
         gui.updateRobotPosition(newPosition);
     }
 
+    public void renderPathWithName(Path path, String name) {
+        String uniqueName = getNextName(name);
+        gui.putPath(path, uniqueName);
+    }
+
     /**
      * Gets the desired address and port of the socket, and applies it.
      */
@@ -141,6 +149,25 @@ public class PathVisualizerManager {
         } catch(IOException ex) {
             System.out.println("Failed to save preferences!");
         }
+    }
+
+    /**
+     * Gets the next available name for something.
+     * This is similar to how the windows file explorer renames duplicate files to "name (1)" or "name (2)"
+     * @param Name The base name to use.
+     * @return The next available name.
+     */
+    private String getNextName(String name) {
+        if(names.get(name) != null) {
+            //name has been used before, rename it
+            int nameNumber = names.get(name).intValue();
+            nameNumber++;
+            names.put(name, Integer.valueOf(nameNumber));
+            return name + " (" + Integer.toString(nameNumber) + ")";
+        }
+
+        names.put(name, Integer.valueOf(0));
+        return name;
     }
 
     /**

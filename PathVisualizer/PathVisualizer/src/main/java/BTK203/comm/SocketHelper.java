@@ -8,12 +8,9 @@ import java.net.Socket;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
-import java.util.NoSuchElementException;
-import java.util.Scanner;
-import java.util.regex.PatternSyntaxException;
-
 import BTK203.App;
 import BTK203.Constants;
+import BTK203.util.Path;
 import BTK203.util.Point2D;
 
 /**
@@ -52,11 +49,13 @@ public class SocketHelper {
 
                 //parse data and look for messages.
                 //messages formatted as such: "([subject]:[message])"
-                int lastCloseParen = currentData.lastIndexOf(")");
-                int lastOpenParen = currentData.lastIndexOf("(", lastCloseParen);
-                if(lastCloseParen > -1 && lastOpenParen > -1) {
-                    String relavantData = currentData.substring(lastOpenParen, lastCloseParen);
-                    currentData = currentData.substring(lastCloseParen + 1);
+                while(currentData.indexOf(")") > -1 && currentData.indexOf("(") > -1) {
+                    int
+                        openParenIndex = currentData.indexOf("("),
+                        closeParenIndex = currentData.indexOf(")");
+                        
+                    String relavantData = currentData.substring(openParenIndex, closeParenIndex);
+                    currentData = currentData.substring(closeParenIndex + 1);
 
                     String[] completedMessages = relavantData.split("\\)");
                     for(int i=0; i<completedMessages.length; i++) {
@@ -73,6 +72,22 @@ public class SocketHelper {
                             if(subject.equals("Pos")) { //robot is declaring a change in position. The "message" part of the message will be the point.
                                 Point2D newRobotPosition = Point2D.fromString(message);
                                 App.getManager().updateRobotPosition(newRobotPosition);
+                            }
+
+                            if(subject.startsWith("Path")) { //just what it sounds like
+                                if(subject.contains("-")) { //"-" separates prefix from the path name.
+                                    //subject formatted as such: "Path-"[name]
+                                    String pathName = subject.split("-")[1];
+
+                                    String[] pointStrings = message.split("\n");
+                                    Point2D[] points = new Point2D[pointStrings.length];
+                                    for(int p=0; p<points.length; p++) {
+                                        points[p] = Point2D.fromString(pointStrings[p]);
+                                    }
+
+                                    Path newPath = new Path(points, Path.getNextColor());
+                                    App.getManager().renderPathWithName(newPath, pathName);
+                                }
                             }
                         }
                     }

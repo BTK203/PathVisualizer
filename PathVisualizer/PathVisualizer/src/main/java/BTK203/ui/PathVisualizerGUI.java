@@ -112,6 +112,18 @@ public class PathVisualizerGUI extends JFrame {
     }
 
     /**
+     * Renders a path on the Visualizer.
+     * @param path The path to render.
+     * @param name The name of the path.
+     */
+    public void putPath(Path path, String name) {
+        if(!manifest.widgetExists(name) && path.isValid()) {
+            visualizer.render(path);
+            manifest.addWidget(new RenderableWidget(path, name));
+        }
+    }
+
+    /**
      * Updates the robot position on the Visualizer.
      * @param newPosition The position to render.
      */
