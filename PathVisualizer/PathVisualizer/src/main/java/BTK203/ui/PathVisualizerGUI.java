@@ -2,6 +2,7 @@ package BTK203.ui;
 
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.UIManager;
 import javax.swing.UnsupportedLookAndFeelException;
@@ -17,6 +18,9 @@ import java.awt.Color;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowAdapter;
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.util.ArrayList;
 
 /**
  * The main Graphical User Interface of the program.
@@ -106,7 +110,62 @@ public class PathVisualizerGUI extends JFrame {
                     //render the path on the visualizer and add to the manifest
                     visualizer.render(newPath);
                     manifest.addWidget(new RenderableWidget(newPath, pathName));
+                } else {
+                    JOptionPane.showMessageDialog(this, "Could not read File!");
                 }
+            }
+        }
+    }
+
+    /**
+     * Prompts the user to select a renderable to save to file.
+     * @return The IRenderable to save to file.
+     */
+    public void promptRenderableToSave() {
+        ArrayList<IRenderable> renderableList = visualizer.getRenderables();
+        IRenderable[] renderableArray = new IRenderable[renderableList.size()];
+        for(int i=0; i<renderableList.size(); i++) {
+            renderableArray[i] = renderableList.get(i);
+        }
+
+        //prompt the user for the path to save
+        PathChooser pathChooser = new PathChooser(this, renderableArray, manifest.getWidgetNames(), false);
+        IRenderable desiredRenderable = pathChooser.run();
+
+        if(desiredRenderable == null) {
+            JOptionPane.showMessageDialog(this, "No Path or Point Selected.");
+            return;
+        }
+
+        //prompt the user for the path to the new file
+        JFileChooser fileChooser = new JFileChooser();
+        fileChooser.setFileSelectionMode(JFileChooser.SAVE_DIALOG);
+        fileChooser.setDialogTitle("File Location");
+        fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
+        fileChooser.setSelectedFile(new File("path" + Constants.FILE_SUFFIX));
+
+        //resolve default file path from prefs. Use the main user directory as a fallback.
+        String filePath = App.getManager().getPreference("defaultSaveFilePath", System.getenv("USERPROFILE"));
+        File defaultDirectory = new File(filePath);
+        fileChooser.setCurrentDirectory(defaultDirectory);
+
+        int result = fileChooser.showSaveDialog(this);
+        if(result == JFileChooser.APPROVE_OPTION) {
+            //save the file
+            String saveFilePath = fileChooser.getSelectedFile().getAbsolutePath();
+            String directory = saveFilePath.substring(0, saveFilePath.lastIndexOf("\\"));
+            App.getManager().setPreference("defaultSaveFilePath", directory);
+            if(!saveFilePath.endsWith(Constants.FILE_SUFFIX)) {
+                saveFilePath += Constants.FILE_SUFFIX;
+            }
+
+            String fileContents = desiredRenderable.toString();
+
+            try {
+                Files.writeString(java.nio.file.Path.of(saveFilePath), fileContents);
+            } catch(IOException ex) {
+                System.out.println("Could not write file!");
+                ex.printStackTrace();
             }
         }
     }
@@ -130,9 +189,12 @@ public class PathVisualizerGUI extends JFrame {
     public void updateRobotPosition(Point2D newPosition) {
         if(!robotPositionInitalized) {
             robotPosition = new Position(newPosition, Constants.ROBOT_POSITION_COLOR);
+            robotPositionInitalized = true;
+        }
+
+        if(App.getManager().dataIsLive() && !manifest.widgetExists(Constants.ROBOT_POSITION_NAME)) {
             visualizer.render(robotPosition);
             manifest.addWidget(new RenderableWidget(robotPosition, Constants.ROBOT_POSITION_NAME));
-            robotPositionInitalized = true;
         }
 
         robotPosition.setPosition(newPosition);
@@ -196,5 +258,13 @@ public class PathVisualizerGUI extends JFrame {
      */
     public void setDesiredPort(int newPort) {
         ribbon.setDesiredPort(newPort);
+    }
+
+    /**
+     * Returns whether or not the "Live" button is selected.
+     * @return True if the "Live" button is selected, False otherwise.
+     */
+    public boolean liveButtonSelected() {
+        return ribbon.liveButtonSelected();
     }
 }

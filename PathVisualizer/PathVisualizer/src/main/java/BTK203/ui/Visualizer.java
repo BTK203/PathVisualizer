@@ -12,23 +12,38 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.util.ArrayList;
 
+/**
+ * A class that renders paths onto an area of the screen.
+ */
 public class Visualizer extends JPanel {
     private static final long serialVersionUID = 1L;
     
     private ArrayList<IRenderable> renderables;
 
+    /**
+     * Creates a new Visualizer.
+     */
     public Visualizer() {
         super(new BorderLayout());
+        setMinimumSize(Constants.MINIMUM_VISUALIZER_SIZE);
         renderables = new ArrayList<IRenderable>();
     }
 
+    /**
+     * Adds the passed renderable to the list of renderables to render.
+     * @param renderable The IRenderable to render.
+     */
     public void render(IRenderable renderable) {
-        if(renderable.isValid()) {
+        if(renderable != null && renderable.isValid()) {
             renderables.add(renderable);
             repaint();
         }
     }
 
+    /**
+     * Removes the passed renderable from the list of renderables to render.
+     * @param renderable The IRenderable to stop rendering.
+     */
     public void stopRendering(IRenderable renderable) {
         if(renderables.contains(renderable)) {
             renderables.remove(renderable);
@@ -36,6 +51,24 @@ public class Visualizer extends JPanel {
         }
     }
 
+    /**
+     * Removes all renderables from the list of renderables to render.
+     */
+    public void stopRenderingAll() {
+        renderables.clear();
+    }
+
+    /**
+     * Returns the running list of renderables that the Visualizer is rendering.
+     * @return All renderables currently being rendered.
+     */
+    public ArrayList<IRenderable> getRenderables() {
+        return renderables;
+    }
+
+    /**
+     * Paints the object. This method called by Swing internal methods.
+     */
     public void paint(Graphics g) {
         //fill in the background
         g.setColor(Constants.SECONDARY_BACKGROUND);

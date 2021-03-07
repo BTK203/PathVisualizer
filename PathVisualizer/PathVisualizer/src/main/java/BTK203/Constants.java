@@ -8,9 +8,11 @@ public class Constants {
      * Size Constants
      */
     public static final Dimension 
-        DEFAULT_WINDOW_SIZE   = new Dimension(850, 420),
-        DEFAULT_MANIFEST_SIZE = new Dimension(225, 420),
-        COLOR_SAMPLE_SIZE     = new Dimension(18, 18);
+        DEFAULT_WINDOW_SIZE      = new Dimension(850, 420),
+        DEFAULT_MANIFEST_SIZE    = new Dimension(225, 420),
+        DEFAULT_SAVE_DIALOG_SIZE = new Dimension(500, 300),
+        MINIMUM_VISUALIZER_SIZE  = new Dimension(200, 200),
+        COLOR_SAMPLE_SIZE        = new Dimension(18, 18);
 
     public static final int
         DEFAULT_HORIZONTAL_MARGIN = 8,
@@ -61,5 +63,6 @@ public class Constants {
      * Other constants
      */
     public static final String
-        ROBOT_POSITION_NAME = "Robot Position";
+        ROBOT_POSITION_NAME = "Robot Position",
+        FILE_SUFFIX         = ".hpt";
 }

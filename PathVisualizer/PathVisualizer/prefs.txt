@@ -1,3 +1,0 @@
-defaultPort:"3695"
-defaultOpenFilePath:"D:\_Users\Brach\projects\FRC\PathVisualizer-git\PathVisualizer"
-defaultIPAddress:"192.168.0.46"

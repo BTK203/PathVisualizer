@@ -80,6 +80,14 @@ public class PathVisualizerManager {
     }
 
     /**
+     * Returns whether or not the application is listening for live path data from the robot.
+     * @return True if live is enabled, false otherwise.
+     */
+    public boolean dataIsLive() {
+        return gui.liveButtonSelected();
+    }
+
+    /**
      * Sets the visibility of a path.
      * @param path The path to change.
      * @param visible True if the path should be visible, false otherwise.
@@ -101,6 +109,13 @@ public class PathVisualizerManager {
      */
     public void loadPath() {
         gui.openFile();
+    }
+
+    /**
+     * Prompts the user to select a path to save and a location to save it to.
+     */
+    public void saveRenderable() {
+        gui.promptRenderableToSave();
     }
 
     /**

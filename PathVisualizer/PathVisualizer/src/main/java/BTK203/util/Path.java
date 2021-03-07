@@ -92,6 +92,19 @@ public class Path implements IRenderable {
     }
 
     /**
+     * Converts the Path into a user (and computer) readable String.
+     * @return The string representation of the Path.
+     */
+    public String toString() {
+        String pathString = "";
+        for(Point2D point : points) {
+            pathString += point.toString() + "\n";
+        }
+
+        return pathString;
+    }
+
+    /**
      * Gets the next color for a new path.
      */
     public static Color getNextColor() {

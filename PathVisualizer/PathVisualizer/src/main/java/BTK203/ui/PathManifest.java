@@ -79,4 +79,17 @@ public class PathManifest extends JPanel {
 
         return false;
     }
+
+    /**
+     * Returns an array containing the names of every IRenderable on the manifest.
+     * @return Names of all renderables on the manifest.
+     */
+    public String[] getWidgetNames() {
+        String[] array = new String[widgets.size()];
+        for(int i=0; i<widgets.size(); i++) {
+            array[i] = widgets.get(i).getName();
+        }
+
+        return array;
+    }
 }

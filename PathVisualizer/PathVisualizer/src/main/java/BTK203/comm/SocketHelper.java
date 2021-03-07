@@ -47,6 +47,11 @@ public class SocketHelper {
                 socket.getInputStream().read(buffer);
                 currentData += new String(buffer);
 
+                //now that the buffer is cleared, if the user doesn't want to see live data, they will not.
+                if(!App.getManager().dataIsLive()) {
+                    currentData = "";
+                }
+
                 //parse data and look for messages.
                 //messages formatted as such: "([subject]:[message])"
                 while(currentData.indexOf(")") > -1 && currentData.indexOf("(") > -1) {
@@ -92,6 +97,14 @@ public class SocketHelper {
                         }
                     }
                 }
+            } catch(SocketException ex) {
+                //this exception is usually thrown because of a connection issue. To handle it, we terminate the current connection and look for a new one
+                try {
+                    this.socket.close();
+                } catch(IOException ex2) {
+                    printIOExceptionMessage(ex2);
+                }
+                attemptToConnectSocket();
             } catch(SocketTimeoutException ex) { //to stop if from printing a stack trace every time the read times out
             } catch(IOException ex) {
                 printIOExceptionMessage(ex);
@@ -159,6 +172,7 @@ public class SocketHelper {
 
     /**
      * Prints the generic error message from a SocketException.
+     * TODO figure out if we should delete this
      */
     private void printSocketExceptionMessage(SocketException ex) {
         System.out.println("An error occurred in the DatagramSocket.");

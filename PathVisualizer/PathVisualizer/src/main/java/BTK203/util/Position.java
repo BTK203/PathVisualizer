@@ -67,4 +67,12 @@ public class Position implements IRenderable {
     public void setVisible(boolean visible) {
         this.visible = visible;
     }
+
+    /**
+     * Returns a human (and computer) readable String representation of this Position.
+     * @return A string representing position.
+     */
+    public String toString() {
+        return position.toString();
+    }
 }

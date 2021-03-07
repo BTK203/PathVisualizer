@@ -45,7 +45,7 @@ public class Ribbon extends JPanel {
             JButton saveToFile = new JButton("Save");
                 saveToFile.addActionListener(new ActionListener() {
                     public void actionPerformed(ActionEvent e) {
-                        System.out.println("save file");
+                        App.getManager().saveRenderable();
                     }
                 });
 
@@ -59,6 +59,7 @@ public class Ribbon extends JPanel {
             socketPanel.setLayout(new BoxLayout(socketPanel, BoxLayout.X_AXIS));
 
             this.liveButton = new JToggleButton("Live");
+                liveButton.setSelected(true);
                 socketPanel.add(liveButton);
             
             //ip address
@@ -155,5 +156,13 @@ public class Ribbon extends JPanel {
         if(Util.portIsValid(port)) {
             ipPort.setText(Integer.valueOf(port).toString());
         }
+    }
+
+    /**
+     * Returns whether or not the "Live" button is selected
+     * @return True if the "Live" button is selected, false otherwise.
+     */
+    public boolean liveButtonSelected() {
+        return liveButton.isSelected();
     }
 }

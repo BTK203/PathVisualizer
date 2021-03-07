@@ -16,21 +16,22 @@ public class ServerSocketHelper {
     private ServerSocket serversocket;
     private Socket clientSocket;
     private int port;
-    private boolean initalized;
+    private boolean 
+        initalized,
+        connected;
     private Point2D robotPosition;
 
     public ServerSocketHelper(int port) {
         this.port = port;
         initalized = false;
         robotPosition = new Point2D(0, 0, 0);
-
         try {
             this.serversocket = new ServerSocket(port);
-            this.clientSocket = serversocket.accept();
-            initalized = true;
         } catch(IOException ex) {
             printIOExceptionMessage(ex);
         }
+
+        attemptToConnectSocket();
     }
 
     /**
@@ -39,11 +40,7 @@ public class ServerSocketHelper {
     public void update() {
         String message = composeMessage("Pos", robotPosition.toString());
 
-        try {
-            clientSocket.getOutputStream().write(message.getBytes());
-        } catch(IOException ex) {
-            printIOExceptionMessage(ex);
-        }
+        sendMessage(message);
     }
 
     public void setRobotPosition(Point2D position) {
@@ -58,10 +55,43 @@ public class ServerSocketHelper {
         try {
             String contents = Files.readString(Path.of(filePath));
             String message = composeMessage("Path-" + name, contents);
-            System.out.println("transferring " + message);
-            clientSocket.getOutputStream().write(message.getBytes());
+            sendMessage(message);
         } catch(IOException ex) {
             printIOExceptionMessage(ex);
+        }
+    }
+
+    private void attemptToConnectSocket() {
+        this.initalized = false;
+        this.connected = false;
+        new Thread(
+            () -> {
+                try {
+                    this.clientSocket = serversocket.accept();
+                    initalized = true;
+                    connected = true;
+                } catch(IOException ex) {
+                    printIOExceptionMessage(ex);
+                }
+            }
+        ).start();
+    }
+
+    private void sendMessage(String message) {
+        if(initalized && connected) {
+            try {
+                clientSocket.getOutputStream().write(message.getBytes());
+            } catch(SocketException ex) {
+                //likely a connection issue. Terminate connection and look for a new one
+                try {
+                    clientSocket.close();
+                } catch(IOException ex2) {
+                    printIOExceptionMessage(ex2);
+                }
+                attemptToConnectSocket();
+            } catch(IOException ex) {
+                printIOExceptionMessage(ex);
+            }
         }
     }
 
