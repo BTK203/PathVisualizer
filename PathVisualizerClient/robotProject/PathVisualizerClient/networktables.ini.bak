@@ -1,0 +1,4 @@
+[NetworkTables Storage 3.0]
+string "/Preferences/.type"="RobotPreferences"
+string "/Preferences/Path Name"="Epic Path"
+string "/Preferences/Path To Send"="C:/_Users/Brach/projects/FRC/PathVisualizer/PathVisualizerClient/robotProject/PathVisualizerClient/testpath.hpt"
