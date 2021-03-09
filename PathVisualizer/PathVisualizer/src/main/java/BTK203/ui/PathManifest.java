@@ -6,7 +6,6 @@ import javax.swing.JLabel;
 import javax.swing.JPanel;
 import BTK203.Constants;
 import BTK203.util.IRenderable;
-import BTK203.util.Path;
 import BTK203.util.Util;
 
 /**

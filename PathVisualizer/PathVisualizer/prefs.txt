@@ -1,0 +1,5 @@
+defaultPort:"3695"
+defaultOpenFilePath:"D:\_Users\Brach\projects\FRC\PathVisualizer\PathVisualizer"
+defaultIPAddress:"127.0.0.1"
+defaultRobotRootDirectory:"/home/lvuser"
+defaultSaveFilePath:"D:\_Users\Brach\projects\FRC\PathVisualizer\PathVisualizerClient\PathVisualizerClient"

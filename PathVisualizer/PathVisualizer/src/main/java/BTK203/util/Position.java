@@ -9,15 +9,17 @@ public class Position implements IRenderable {
     private Point2D position;
     private Color color;
     private boolean visible;
+    private String name;
 
     /**
      * Creates a new Position object.
      * @param position The position of the point.
      * @param color The color of the point.
      */
-    public Position(Point2D position, Color color) {
+    public Position(Point2D position, Color color, String name) {
         this.position = position;
         this.color = color;
+        this.name = name;
         this.visible = true;
     }
 
@@ -66,6 +68,14 @@ public class Position implements IRenderable {
      */
     public void setVisible(boolean visible) {
         this.visible = visible;
+    }
+
+    /**
+     * Returns the name of the Renderable as it would appear on the Manifest.
+     * @return Name of the Renderable.
+     */
+    public String getName() {
+        return name;
     }
 
     /**

@@ -32,7 +32,11 @@ public class Constants {
         ERROR_RED_COLOR      = new Color(255, 50, 50),
         WARNING_YELLOW_COLOR = new Color(255, 255, 50),
         GOOD_GREEN_COLOR     = new Color(50, 255, 50),
-        ROBOT_POSITION_COLOR = new Color(0, 0, 0);
+        ROBOT_POSITION_COLOR = new Color(0, 0, 0),
+        BLACK                = new Color(0, 0, 0),
+        WHITE                = new Color(255, 255, 255),
+        HOVER_BLUE           = new Color(229, 243, 255),
+        SELECT_BLUE          = new Color(204, 232, 255);
 
     public static final float
         NEXTCOLOR_HUE_INCREMENT = 1 / 6f,
@@ -50,19 +54,26 @@ public class Constants {
      */
     public static final long
         UPDATE_RATE = 50, //50 ms or 20 hz
-        PING_RATE = 500;
+        DOUBLE_CLICK_TIME = 400,
+        PING_RATE = 500,
+        MESSAGE_TIMEOUT = 5000; //time for robot to respond before processes give up (in ms).
 
     /**
      * Socket constants
      */
     public static final int
         SOCKET_TIMEOUT = 20,
-        SOCKET_BUFFER_SIZE = 128000; //128 kB
+        SOCKET_BUFFER_SIZE = 128000, //128 kB
+        MAX_UNCLAIMED_MESSAGES = 256;
 
     /**
      * Other constants
      */
     public static final String
-        ROBOT_POSITION_NAME = "Robot Position",
-        FILE_SUFFIX         = ".hpt";
+        ROBOT_POSITION_NAME          = "Robot Position",
+        FILE_SUFFIX                  = ".hpt",
+        ROBOTBROWSER_DIRECTORY_SUFFIX = ":dir",
+        DEFAULT_ROBOT_FILE_NAME      = "points" + FILE_SUFFIX,
+        DEFAULT_PC_FILE_NAME         = "path" + FILE_SUFFIX,
+        DEFAULT_ROBOT_ROOT_DIR       = "/home/lvuser";
 }

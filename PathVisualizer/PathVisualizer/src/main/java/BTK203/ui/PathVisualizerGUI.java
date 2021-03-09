@@ -9,6 +9,7 @@ import javax.swing.UnsupportedLookAndFeelException;
 import com.sun.java.swing.plaf.windows.WindowsLookAndFeel;
 import BTK203.App;
 import BTK203.Constants;
+import BTK203.enumeration.FileOperation;
 import BTK203.util.IRenderable;
 import BTK203.util.Path;
 import BTK203.util.Point2D;
@@ -39,7 +40,7 @@ public class PathVisualizerGUI extends JFrame {
      */
     public PathVisualizerGUI() {
         super("PathVisualizer");
-        robotPosition = new Position(new Point2D(0, 0, 0), new Color(0, 0, 0));
+        robotPosition = new Position(new Point2D(0, 0, 0), new Color(0, 0, 0), Constants.ROBOT_POSITION_NAME);
         robotPositionInitalized = false;
         System.out.println("Building UI...");
 
@@ -100,16 +101,15 @@ public class PathVisualizerGUI extends JFrame {
         if(result == JFileChooser.APPROVE_OPTION) {
             File selectedFile = fileChooser.getSelectedFile();
             String pathString = selectedFile.getAbsolutePath();
-            String pathName = pathString.substring(pathString.lastIndexOf("\\") + 1);
+            Path newPath = new Path(pathString, Path.getNextColor());
 
             App.getManager().setPreference("defaultOpenFilePath", pathString.substring(0, pathString.lastIndexOf("\\"))); //set the default directory to the directory of the file (not the file though)
 
-            if(!manifest.widgetExists(pathName)) {
-                Path newPath = new Path(pathString, Path.getNextColor());
+            if(!manifest.widgetExists(newPath.getName())) { //I dont trust .equals() for something as big as an IRenderable, so we're using the name
                 if(newPath.isValid()) {
                     //render the path on the visualizer and add to the manifest
                     visualizer.render(newPath);
-                    manifest.addWidget(new RenderableWidget(newPath, pathName));
+                    manifest.addWidget(new RenderableWidget(newPath));
                 } else {
                     JOptionPane.showMessageDialog(this, "Could not read File!");
                 }
@@ -142,7 +142,7 @@ public class PathVisualizerGUI extends JFrame {
         fileChooser.setFileSelectionMode(JFileChooser.SAVE_DIALOG);
         fileChooser.setDialogTitle("File Location");
         fileChooser.setFileSelectionMode(JFileChooser.FILES_ONLY);
-        fileChooser.setSelectedFile(new File("path" + Constants.FILE_SUFFIX));
+        fileChooser.setSelectedFile(new File(Constants.DEFAULT_PC_FILE_NAME));
 
         //resolve default file path from prefs. Use the main user directory as a fallback.
         String filePath = App.getManager().getPreference("defaultSaveFilePath", System.getenv("USERPROFILE"));
@@ -171,14 +171,24 @@ public class PathVisualizerGUI extends JFrame {
     }
 
     /**
+     * Prompts the user to select a file to load from or save to the robot.
+     * @param operation The operation (save / load) that will take place
+     * @return The absolute robot file path that the user selects
+     */
+    public String runRobotFileDialog(FileOperation operation) {
+        RobotFileDialog fileDialog = new RobotFileDialog(this, operation);
+        return fileDialog.run();
+    }
+
+    /**
      * Renders a path on the Visualizer.
      * @param path The path to render.
      * @param name The name of the path.
      */
-    public void putPath(Path path, String name) {
-        if(!manifest.widgetExists(name) && path.isValid()) {
+    public void putPath(Path path) {
+        if(!manifest.widgetExists(path.getName()) && path.isValid()) {
             visualizer.render(path);
-            manifest.addWidget(new RenderableWidget(path, name));
+            manifest.addWidget(new RenderableWidget(path));
         }
     }
 
@@ -188,13 +198,13 @@ public class PathVisualizerGUI extends JFrame {
      */
     public void updateRobotPosition(Point2D newPosition) {
         if(!robotPositionInitalized) {
-            robotPosition = new Position(newPosition, Constants.ROBOT_POSITION_COLOR);
+            robotPosition = new Position(newPosition, Constants.ROBOT_POSITION_COLOR, Constants.ROBOT_POSITION_NAME);
             robotPositionInitalized = true;
         }
 
         if(App.getManager().dataIsLive() && !manifest.widgetExists(Constants.ROBOT_POSITION_NAME)) {
             visualizer.render(robotPosition);
-            manifest.addWidget(new RenderableWidget(robotPosition, Constants.ROBOT_POSITION_NAME));
+            manifest.addWidget(new RenderableWidget(robotPosition));
         }
 
         robotPosition.setPosition(newPosition);
