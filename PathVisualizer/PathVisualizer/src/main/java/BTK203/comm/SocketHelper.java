@@ -8,6 +8,8 @@ import java.net.Socket;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
+
 import BTK203.App;
 import BTK203.Constants;
 import BTK203.util.Path;
@@ -85,12 +87,20 @@ public class SocketHelper {
                                     String pathName = subject.split("-")[1];
 
                                     String[] pointStrings = message.split("\n");
-                                    Point2D[] points = new Point2D[pointStrings.length];
-                                    for(int p=0; p<points.length; p++) {
-                                        points[p] = Point2D.fromString(pointStrings[p]);
+                                    ArrayList<Point2D> points = new ArrayList<Point2D>();
+                                    for(int p=0; p<pointStrings.length; p++) {
+                                        Point2D newPoint = Point2D.fromString(pointStrings[p]);
+                                        if(newPoint != null) {
+                                            points.add(newPoint);
+                                        }
                                     }
 
-                                    Path newPath = new Path(points, Path.getNextColor());
+                                    Point2D[] pointsArray = new Point2D[points.size()];
+                                    for(int p=0; p<points.size(); p++) {
+                                        pointsArray[p] = points.get(p);
+                                    }
+
+                                    Path newPath = new Path(pointsArray, Path.getNextColor());
                                     App.getManager().renderPathWithName(newPath, pathName);
                                 }
                             }

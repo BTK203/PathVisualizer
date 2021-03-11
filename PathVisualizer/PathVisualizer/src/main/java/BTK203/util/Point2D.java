@@ -87,9 +87,14 @@ public class Point2D {
      */
     public static Point2D fromString(String input) {
         String[] parts = input.split(",");
-        double x = Double.valueOf(parts[0]).doubleValue();
-        double y = Double.valueOf(parts[1]).doubleValue();
-        double heading = Double.valueOf(parts[2]).doubleValue();
-        return new Point2D(x, y, heading);
+        try {
+            double x = Double.valueOf(parts[0]).doubleValue();
+            double y = Double.valueOf(parts[1]).doubleValue();
+            double heading = Double.valueOf(parts[2]).doubleValue();
+            return new Point2D(x, y, heading);
+        } catch(NumberFormatException ex) {
+        }
+        
+        return null;
     }
 }
