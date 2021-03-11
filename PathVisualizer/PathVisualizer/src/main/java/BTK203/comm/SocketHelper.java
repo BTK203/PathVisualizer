@@ -8,6 +8,7 @@ import java.net.Socket;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
 import java.util.HashMap;
 
 import BTK203.App;
@@ -79,7 +80,6 @@ public class SocketHelper {
                             if(subject.startsWith("(")) {
                                 subject = subject.substring(1); //substring off "("
                             }
-
 
                             handleMessage(subject, message);
                         }
