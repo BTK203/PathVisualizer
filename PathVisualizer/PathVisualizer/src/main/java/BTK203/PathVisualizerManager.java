@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 import BTK203.comm.SocketHelper;
+import BTK203.enumeration.FileOperation;
+import BTK203.enumeration.MessageType;
 import BTK203.ui.PathVisualizerGUI;
 import BTK203.util.IRenderable;
 import BTK203.util.Path;
@@ -56,6 +58,14 @@ public class PathVisualizerManager {
             }
         };
         timer.scheduleAtFixedRate(updateTask, 1, Constants.UPDATE_RATE);
+    }
+
+    /**
+     * Returns the Manager's SocketHelper.
+     * @return A SocketHelper.
+     */
+    public SocketHelper getSocketHelper() {
+        return socketHelper;
     }
 
     /**
@@ -119,15 +129,47 @@ public class PathVisualizerManager {
     }
 
     /**
-     * Updates the robot's position on the Visualizer.
+     * Prompts the user to save a file to the robot.
      */
-    public void updateRobotPosition(Point2D newPosition) {
-        gui.updateRobotPosition(newPosition);
+    public void doRobotFileOperation(FileOperation operation) {
+        String path = gui.runRobotFileDialog(operation);
+        System.out.println("Path: " + path);
     }
 
-    public void renderPathWithName(Path path, String name) {
-        String uniqueName = getNextName(name);
-        gui.putPath(path, uniqueName);
+    /**
+     * Forwards data from the robot to its appropriate location for handling.
+     * The value of contents must correlate with the value of subject.
+     * Quick reference (value of subject : type of contents)
+     * PATH : Path
+     * POSITION: Point2D
+     * @param subject The subject of the message that the robot sent
+     * @param contents The contents of the message, ready for handling.
+     */
+    public void forwardData(MessageType subject, Object contents) {
+        switch(subject) {
+        case PATH: {
+                if(contents instanceof Path) {
+                    Path path = (Path) contents;
+                    path.setName(getNextName(path.getName()));
+                    gui.putPath(path);
+                } else {
+                    System.out.println("Manager tried to forward path data to GUI, but it was not a path!"); //hopefully this code is never run, but its nice to have
+                    System.out.println("Contents: " + contents.toString());
+                }
+            }            
+            break;
+        case POSITION: {
+                if(contents instanceof Point2D) {
+                    gui.updateRobotPosition((Point2D) contents);
+                } else {
+                    System.out.println("Manager tried to forward position to GUI, but it was not a Point2D!"); //same here
+                    System.out.println("Contents: " + contents.toString());
+                }
+            }
+            break;
+        default:
+            return;
+        }
     }
 
     /**

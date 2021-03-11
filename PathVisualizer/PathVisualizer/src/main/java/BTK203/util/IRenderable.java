@@ -11,4 +11,5 @@ public interface IRenderable {
     public boolean   isVisible();
     public boolean   isValid();
     public void      setVisible(boolean visible);
+    public String    getName();
 }

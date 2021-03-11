@@ -19,12 +19,15 @@ public class Path implements IRenderable {
         valid,
         visible;
 
+    private String name;
+
     /**
      * Creates a new path from the given file path.
      * @param file The path to the file to read from.
      * @param color The color of the path.
      */
     public Path(String file, Color color) {
+        this.name = file.substring(file.lastIndexOf('\\') + 1); //name is JUST the file name, not the absolute file path.
         this.color = color;
         this.valid = false;
         this.visible = true;
@@ -49,9 +52,10 @@ public class Path implements IRenderable {
      * @param points An array of points describing the path.
      * @param color The color of the path.
      */
-    public Path(Point2D[] points, Color color) {
+    public Path(Point2D[] points, Color color, String name) {
         this.points = points;
         this.color = color;
+        this.name = name;
         this.valid = true;
         this.visible = true;
     }
@@ -92,6 +96,22 @@ public class Path implements IRenderable {
     }
 
     /**
+     * Returns the name of the Renderable as it would appear on the manifest.
+     * @return The name of the Renderable.
+     */
+    public String getName() {
+        return name;
+    }
+
+    /**
+     * Sets the name of a Path. This should really only be used if avoiding duplicate names.
+     * @param name The new name of the Path.
+     */
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    /**
      * Converts the Path into a user (and computer) readable String.
      * @return The string representation of the Path.
      */
@@ -102,6 +122,21 @@ public class Path implements IRenderable {
         }
 
         return pathString;
+    }
+
+    /**
+     * Creates a new Path from the given string.
+     * @param string The string to interpret.
+     * @return A Path containing the information in the String.
+     */
+    public static Path fromString(String string, String name) {
+        String[] pointStrings = string.split("\n");
+        Point2D[] points = new Point2D[pointStrings.length];
+        for(int p=0; p<points.length; p++) {
+            points[p] = Point2D.fromString(pointStrings[p]);
+        }
+
+        return new Path(points, Path.getNextColor(), name);
     }
 
     /**

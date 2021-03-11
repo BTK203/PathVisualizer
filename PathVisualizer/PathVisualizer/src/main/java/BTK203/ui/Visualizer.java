@@ -1,15 +1,12 @@
 package BTK203.ui;
 
 import BTK203.util.IRenderable;
-import BTK203.util.Path;
 import BTK203.util.Point2D;
-import BTK203.util.Position;
 import BTK203.util.Rectangle;
 import BTK203.Constants;
 import java.awt.Graphics;
 import javax.swing.JPanel;
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.util.ArrayList;
 
 /**

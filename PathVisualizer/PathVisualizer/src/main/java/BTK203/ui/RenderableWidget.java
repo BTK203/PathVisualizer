@@ -11,7 +11,6 @@ import javax.swing.JPanel;
 import BTK203.App;
 import BTK203.Constants;
 import BTK203.util.IRenderable;
-import BTK203.util.Path;
 import BTK203.util.Util;
 
 /**
@@ -21,7 +20,6 @@ public class RenderableWidget extends JPanel {
     private static final long serialVersionUID = 1L;
     
     private IRenderable renderable;
-    private String name;
     private JButton
         toggleWidget,
         deleteWidget;
@@ -31,16 +29,15 @@ public class RenderableWidget extends JPanel {
      * @param renderable The path that the widget represents
      * @param name The name of the widget
      */
-    public RenderableWidget(IRenderable renderable, String name) {
+    public RenderableWidget(IRenderable renderable) {
         super();
         this.renderable = renderable;
-        this.name = name;
 
         setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
         setAlignmentX(RIGHT_ALIGNMENT);
 
         //text to identify the name of the path
-        JLabel nameLabel = new JLabel(name);
+        JLabel nameLabel = new JLabel(renderable.getName());
         nameLabel.setBorder(Util.generateHorizontalMargin());
         add(nameLabel);
 
@@ -84,6 +81,6 @@ public class RenderableWidget extends JPanel {
      * Returns the name of this widget.
      */
     public String getName() {
-        return name;
+        return renderable.getName();
     }
 }
