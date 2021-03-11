@@ -2,6 +2,7 @@ package BTK203.ui;
 
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
@@ -10,15 +11,14 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
-import javax.swing.ScrollPaneLayout;
 
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseListener;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.awt.event.MouseEvent;
 import java.awt.BorderLayout;
+import java.awt.Dimension;
 
 import BTK203.App;
 import BTK203.Constants;
@@ -200,6 +200,10 @@ public class RobotFileDialog extends JDialog {
                 panel.setLayout(new BoxLayout(panel, BoxLayout.X_AXIS));
                 panel.setAlignmentX(LEFT_ALIGNMENT);
                 panel.setBorder(Util.generateHorizontalMargin());
+
+                JLabel icon = new JLabel(new ImageIcon(isDirectory ? "src/main/java/BTK203/ui/icons/folder.png" : "src/main/java/BTK203/ui/icons/file.png"));
+                    icon.setPreferredSize(new Dimension(20, 20));
+                    panel.add(icon);
 
                 JLabel newLabel = new JLabel(pathName);
                     panel.add(newLabel);
