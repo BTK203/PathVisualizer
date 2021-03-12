@@ -2,6 +2,7 @@ package BTK203.ui;
 
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
+import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JDialog;
@@ -80,6 +81,21 @@ public class RobotFileDialog extends JDialog {
                         });
 
                         directoryPanel.add(directoryBox);
+
+                    Icon backIcon = new ImageIcon(Constants.BACK_ICON);
+                    JButton backButton = new JButton(backIcon);
+                        backButton.addActionListener(new ActionListener() {
+                            public void actionPerformed(ActionEvent e) {
+                                String currentDir = fileSystem.getCurrentDirectory();
+                                if(currentDir.contains("/")) {
+                                    String newDir = currentDir.substring(0, currentDir.lastIndexOf("/"));
+                                    populateList(newDir);
+                                }
+                            }
+                        });
+                        backButton.setPreferredSize(new Dimension(backIcon.getIconWidth() + 5, backIcon.getIconHeight() + 5));
+                        directoryPanel.add(backButton);
+
                     header.add(directoryPanel);
                 contents.add(header, BorderLayout.NORTH);
             
@@ -103,7 +119,7 @@ public class RobotFileDialog extends JDialog {
                 JButton continueButton = new JButton(operation == FileOperation.SAVE ? "Save" : "Load");
                     continueButton.addActionListener(new ActionListener() {
                         public void actionPerformed(ActionEvent e) {
-                            System.out.println("Save / Load");
+                            complete(directoryBox.getText() + "/" + nameBox.getText());
                         }
                     });
 
@@ -201,7 +217,7 @@ public class RobotFileDialog extends JDialog {
                 panel.setAlignmentX(LEFT_ALIGNMENT);
                 panel.setBorder(Util.generateHorizontalMargin());
 
-                JLabel icon = new JLabel(new ImageIcon(isDirectory ? "src/main/java/BTK203/ui/icons/folder.png" : "src/main/java/BTK203/ui/icons/file.png"));
+                JLabel icon = new JLabel(new ImageIcon(isDirectory ? Constants.DIRECTORY_ICON : Constants.FILE_ICON));
                     icon.setPreferredSize(new Dimension(20, 20));
                     panel.add(icon);
 
@@ -223,6 +239,8 @@ public class RobotFileDialog extends JDialog {
                         if(currentTime - lastClickTime < Constants.DOUBLE_CLICK_TIME) {
                             if(isDirectory) {
                                 populateList(fileSystem.getCurrentDirectory() + "/" + pathName);
+                            } else {
+                                complete(directoryBox.getText() + "/" + nameBox.getText());
                             }
 
                             lastClickTime = 0; //reset the double click by setting to 0

@@ -132,8 +132,30 @@ public class PathVisualizerManager {
      * Prompts the user to save a file to the robot.
      */
     public void doRobotFileOperation(FileOperation operation) {
-        String path = gui.runRobotFileDialog(operation);
-        System.out.println("Path: " + path);
+        String filePath = gui.runRobotFileDialog(operation);
+        System.out.println("Path: " + filePath);
+
+        if(filePath == null) {
+            return;
+        }
+
+        if(!filePath.contains("/")) {
+            return;
+        }
+
+        new Thread(
+            () -> {
+                if(operation == FileOperation.LOAD) {
+                    String fileName = "Robot: " + filePath.substring(filePath.lastIndexOf("/") + 1);
+                    String pathString = socketHelper.sendMessageAndGetResponse(MessageType.LOAD, filePath);
+                    Path newPath = Path.fromString(pathString, fileName);
+                    gui.putPath(newPath);
+                } else { //FileOperation.SAVE
+                    
+                }
+            }
+        ).start();
+        
     }
 
     /**

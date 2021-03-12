@@ -47,7 +47,10 @@ public class Constants {
      * File Locations
      */
     public static final String
-        PREFERENCES_LOCATION = "prefs.txt";
+        PREFERENCES_LOCATION = "prefs.txt",
+        BACK_ICON            = "src/main/java/BTK203/ui/icons/back.png",
+        FILE_ICON            = "src/main/java/BTK203/ui/icons/file.png",
+        DIRECTORY_ICON       = "src/main/java/BTK203/ui/icons/directory.png";
 
     /**
      * Timing

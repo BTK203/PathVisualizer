@@ -1,10 +1,12 @@
 package BTK203.enumeration;
 
 public enum MessageType {
-    UNKNOWN("UNKNOWN", -1),
-    POSITION("Pos", 0),
-    PATH("Path", 1),
-    DIRECTORY_REQUEST("Dir", 2);
+    UNKNOWN("UNKNOWN", -1),      //MESSAGE FORMATS BY TYPE:
+    POSITION("Pos", 0),          //Pos:[point]
+    PATH("Path", 1),             //Path-[dir]:[path]
+    DIRECTORY_REQUEST("Dir", 2), //Dir:[dir]
+    LOAD("Load", 3),             //Load:[path]
+    SAVE("Save", 4);             //save-[path]:[file]
 
     private final String code;
     private final int index;

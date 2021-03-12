@@ -8,7 +8,6 @@ import java.net.Socket;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
-import java.util.ArrayList;
 import java.util.HashMap;
 
 import BTK203.App;
@@ -101,6 +100,7 @@ public class SocketHelper {
 
     /**
      * Sends a message to the robot and returns the robot's response to the message if there is one.
+     * This method will block until either the response is received, or the operation times out.
      * @param subject The subject of the message to send.
      * @param message The body of the message to send.
      * @return The robot's response to the message, or an empty String if it does not respond.
