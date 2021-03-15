@@ -14,12 +14,13 @@ import BTK203.util.IRenderable;
 import BTK203.util.Util;
 
 /**
- * A widget that represents 
+ * A widget that represents an IRenderable.
  */
 public class RenderableWidget extends JPanel {
     private static final long serialVersionUID = 1L;
     
     private IRenderable renderable;
+    private JLabel nameLabel;
     private JButton
         toggleWidget,
         deleteWidget;
@@ -37,7 +38,7 @@ public class RenderableWidget extends JPanel {
         setAlignmentX(RIGHT_ALIGNMENT);
 
         //text to identify the name of the path
-        JLabel nameLabel = new JLabel(renderable.getName());
+        nameLabel = new JLabel(renderable.getName());
         nameLabel.setBorder(Util.generateHorizontalMargin());
         add(nameLabel);
 
@@ -82,5 +83,13 @@ public class RenderableWidget extends JPanel {
      */
     public String getName() {
         return renderable.getName();
+    }
+
+    /**
+     * Returns the width of the Widget.
+     */
+    @Override
+    public int getWidth() {
+        return nameLabel.getWidth() + Constants.MANIFEST_WIDGET_NONLABEL_WIDTH;
     }
 }

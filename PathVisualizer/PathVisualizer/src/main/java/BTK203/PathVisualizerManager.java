@@ -7,6 +7,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
+
 import BTK203.comm.SocketHelper;
 import BTK203.enumeration.FileOperation;
 import BTK203.enumeration.MessageType;
@@ -54,7 +55,14 @@ public class PathVisualizerManager {
         Timer timer = new Timer();
         TimerTask updateTask = new TimerTask() {
             public void run() {
-                update();
+                try {
+                    update();
+                } catch(Exception ex) {
+                    if(Constants.SHOW_LOWKEY_ERRORS) {
+                        System.err.println("Process encountered an error!");
+                        ex.printStackTrace();
+                    }
+                }
             }
         };
         timer.scheduleAtFixedRate(updateTask, 1, Constants.UPDATE_RATE);
@@ -125,37 +133,80 @@ public class PathVisualizerManager {
      * Prompts the user to select a path to save and a location to save it to.
      */
     public void saveRenderable() {
-        gui.promptRenderableToSave();
+        gui.promptSaveRenderable();
     }
 
     /**
      * Prompts the user to save a file to the robot.
      */
     public void doRobotFileOperation(FileOperation operation) {
-        String filePath = gui.runRobotFileDialog(operation);
-        System.out.println("Path: " + filePath);
+        //resolve from preferences the last file location that the user used. This will be the starting location for the directory
+        String startingDirectory = "/";
+        if(operation == FileOperation.LOAD) {
+            startingDirectory = getPreference("defaultRobotLoadDirectory", Constants.DEFAULT_ROBOT_ROOT_DIR);
+        } else {
+            startingDirectory = getPreference("defaultRobotSaveDirectory", Constants.DEFAULT_ROBOT_ROOT_DIR);
+        }
 
-        if(filePath == null) {
+        //if the user wants a save, we need to know what path to save
+        IRenderable thingToSave = null;
+        if(operation == FileOperation.SAVE) {
+            thingToSave = gui.promptRenderableToSave();
+
+            if(thingToSave == null) {
+                return;
+            }
+        }
+
+        final IRenderable finalThingToSave = thingToSave; //this is needed because java complains about using thingToSave in the Thread
+
+        //get the file path from the user and return if its wack
+        String filePath = gui.runRobotFileDialog(operation, startingDirectory);
+        if(filePath == null || !filePath.contains("/") || filePath.equals("")) {
             return;
         }
 
-        if(!filePath.contains("/")) {
-            return;
+        //saves last choice to preferences for convenience
+        String directoryName = filePath.substring(0, filePath.lastIndexOf("/"));
+        if(operation == FileOperation.LOAD) {
+            setPreference("defaultRobotLoadDirectory", directoryName);
+        } else {
+            setPreference("defaultRobotSaveDirectory", directoryName);
         }
 
+        //do the operation now (separate thread because this involves sendMessageAndGetResponse)
         new Thread(
             () -> {
                 if(operation == FileOperation.LOAD) {
                     String fileName = "Robot: " + filePath.substring(filePath.lastIndexOf("/") + 1);
                     String pathString = socketHelper.sendMessageAndGetResponse(MessageType.LOAD, filePath);
+                    
+                    if(pathString.isEmpty()) {
+                        return;
+                    }
+
+                    if(pathString.contains("ERR")) {
+                        gui.showGeneralAlert("An Error occurred while grabbing the file.");
+                        return;
+                    }
+
                     Path newPath = Path.fromString(pathString, fileName);
+                    if(newPath == null) {
+                        gui.showGeneralAlert("Invalid File!");
+                        return;
+                    }
+
                     gui.putPath(newPath);
                 } else { //FileOperation.SAVE
-                    
+                    if(finalThingToSave != null) {
+                        String response = socketHelper.sendMessageAndGetResponse(MessageType.SAVE, finalThingToSave.toString(), filePath);
+                        if(!response.equals("OK")) {
+                            gui.showGeneralAlert("An Error occurred while saving \"" + finalThingToSave.getName() + "\" To the robot.");
+                        }
+                    }
                 }
             }
         ).start();
-        
     }
 
     /**
@@ -212,7 +263,6 @@ public class PathVisualizerManager {
      * Saves the user preferences to PREFERENCES_LOCATION
      */
     public void savePreferences() {
-        System.out.println("Saving Preferences...");
         String fileContents = "";
         Iterator<String> keys = preferences.keySet().iterator();
         if(keys != null) {

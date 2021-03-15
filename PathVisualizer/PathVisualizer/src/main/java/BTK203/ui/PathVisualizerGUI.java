@@ -1,7 +1,9 @@
 package BTK203.ui;
 
+import javax.swing.BoxLayout;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.UIManager;
@@ -14,6 +16,8 @@ import BTK203.util.IRenderable;
 import BTK203.util.Path;
 import BTK203.util.Point2D;
 import BTK203.util.Position;
+import BTK203.util.Util;
+
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.event.WindowEvent;
@@ -42,7 +46,6 @@ public class PathVisualizerGUI extends JFrame {
         super("PathVisualizer");
         robotPosition = new Position(new Point2D(0, 0, 0), new Color(0, 0, 0), Constants.ROBOT_POSITION_NAME);
         robotPositionInitalized = false;
-        System.out.println("Building UI...");
 
         //make the app look like those nice and easy to use windows apps.
         try {
@@ -63,6 +66,7 @@ public class PathVisualizerGUI extends JFrame {
             //manifest
             manifest = new PathManifest();
             contents.add(manifest, BorderLayout.EAST);
+
         
             setContentPane(contents);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
@@ -117,11 +121,7 @@ public class PathVisualizerGUI extends JFrame {
         }
     }
 
-    /**
-     * Prompts the user to select a renderable to save to file.
-     * @return The IRenderable to save to file.
-     */
-    public void promptRenderableToSave() {
+    public IRenderable promptRenderableToSave() {
         ArrayList<IRenderable> renderableList = visualizer.getRenderables();
         IRenderable[] renderableArray = new IRenderable[renderableList.size()];
         for(int i=0; i<renderableList.size(); i++) {
@@ -129,8 +129,17 @@ public class PathVisualizerGUI extends JFrame {
         }
 
         //prompt the user for the path to save
-        PathChooser pathChooser = new PathChooser(this, renderableArray, manifest.getWidgetNames(), false);
+        PathChooser pathChooser = new PathChooser(this, renderableArray, false);
         IRenderable desiredRenderable = pathChooser.run();
+        return desiredRenderable;
+    }
+
+    /**
+     * Prompts the user to select a renderable to save to file.
+     * @return The IRenderable to save to file.
+     */
+    public void promptSaveRenderable() {
+        IRenderable desiredRenderable = promptRenderableToSave();
 
         if(desiredRenderable == null) {
             JOptionPane.showMessageDialog(this, "No Path or Point Selected.");
@@ -175,9 +184,17 @@ public class PathVisualizerGUI extends JFrame {
      * @param operation The operation (save / load) that will take place
      * @return The absolute robot file path that the user selects
      */
-    public String runRobotFileDialog(FileOperation operation) {
-        RobotFileDialog fileDialog = new RobotFileDialog(this, operation);
+    public String runRobotFileDialog(FileOperation operation, String startingDirectory) {
+        RobotFileDialog fileDialog = new RobotFileDialog(this, operation, startingDirectory);
         return fileDialog.run();
+    }
+
+    /**
+     * Shows an information alert box to the user.
+     * @param message The message to put in the information box.
+     */
+    public void showGeneralAlert(String message) {
+        JOptionPane.showMessageDialog(this, message);
     }
 
     /**

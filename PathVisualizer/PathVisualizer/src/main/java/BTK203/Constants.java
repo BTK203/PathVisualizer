@@ -19,7 +19,9 @@ public class Constants {
         DEFAULT_VERTICAL_MARGIN   = 8,
         POINT_MARK_DIAMETER       = 5,
         ENDPOINT_MARK_DIAMETER    = 10,
-        STANDALONE_POINT_DIAMETER = 14;
+        STANDALONE_POINT_DIAMETER = 14,
+        MANIFEST_MARGIN           = 0,
+        MANIFEST_WIDGET_NONLABEL_WIDTH = 100;
 
     /**
      * Color Constants
@@ -62,12 +64,27 @@ public class Constants {
         MESSAGE_TIMEOUT = 5000; //time for robot to respond before processes give up (in ms).
 
     /**
+     * Settings (debug)
+     */
+    public static final boolean
+        SHOW_LOWKEY_ERRORS = true; //if set to true, program will print out errors that aren't considered to be serious.
+
+    /**
      * Socket constants
      */
     public static final int
         SOCKET_TIMEOUT = 20,
         SOCKET_BUFFER_SIZE = 128000, //128 kB
         MAX_UNCLAIMED_MESSAGES = 256;
+
+    /**
+     * Message Format constants. These must exactly match their counterparts in the robot host.
+     */
+    public static final String
+        START_SEQUENCE = "[",
+        END_SEQUENCE = "]",
+        SPLIT_SEQUENCE = ":::",
+        SUBJECT_SEQUENCE = "---";
 
     /**
      * Other constants

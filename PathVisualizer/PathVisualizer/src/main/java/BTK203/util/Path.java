@@ -56,7 +56,7 @@ public class Path implements IRenderable {
         this.points = points;
         this.color = color;
         this.name = name;
-        this.valid = true;
+        this.valid = points.length > 0;
         this.visible = true;
     }
 
@@ -134,6 +134,9 @@ public class Path implements IRenderable {
         Point2D[] points = new Point2D[pointStrings.length];
         for(int p=0; p<points.length; p++) {
             points[p] = Point2D.fromString(pointStrings[p]);
+            if(points[p] == null) {
+                return null;
+            }
         }
 
         return new Path(points, Path.getNextColor(), name);

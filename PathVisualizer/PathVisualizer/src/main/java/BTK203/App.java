@@ -1,7 +1,7 @@
 package BTK203;
 
 /**
- * Hello world!
+ * PathVisualizer.
  */
 public final class App {
     private static final PathVisualizerManager manager = new PathVisualizerManager();
@@ -14,7 +14,6 @@ public final class App {
      * @param args The arguments of the program.
      */
     public static void main(String[] args) {        
-        System.out.println("Starting...");
         manager.start();
     }
 

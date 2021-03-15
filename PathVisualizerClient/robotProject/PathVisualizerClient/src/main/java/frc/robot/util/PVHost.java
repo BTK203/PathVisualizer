@@ -9,6 +9,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
 import java.net.SocketTimeoutException;
+import java.nio.file.Files;
 
 import edu.wpi.first.wpilibj.DriverStation;
 import frc.robot.Constants;
@@ -116,35 +117,43 @@ public class PVHost {
 
         try {
             //add previously received data to currentData.
+            if(clientSocket.getInputStream().available() < 1) {
+                return;
+            }
+
             byte[] buffer = new byte[Constants.SOCKET_BUFFER_SIZE];
             clientSocket.getInputStream().read(buffer);
             currentData += new String(buffer);
 
             //parse data and look for messages.
-            //messages formatted as such: "([subject]:[message])"
-            while(currentData.indexOf(")") > -1 && currentData.indexOf("(") > -1) {
+            //message formatted as such: "[start sequence] [subject] [subject sequence if there is one] [subject contents if applicable] [split sequence] [contents of message] [end sequence]"
+            while(currentData.indexOf(Constants.START_SEQUENCE) > -1 && currentData.indexOf(Constants.END_SEQUENCE) > -1) {
                 int
-                    openParenIndex = currentData.indexOf("("),
-                    closeParenIndex = currentData.indexOf(")");
+                    startSequenceIndex = currentData.indexOf(Constants.START_SEQUENCE),
+                    endSequenceIndex = currentData.indexOf(Constants.END_SEQUENCE);
                     
-                String relavantData = currentData.substring(openParenIndex, closeParenIndex);
-                currentData = currentData.substring(closeParenIndex + 1);
+                String relavantData = currentData.substring(startSequenceIndex, endSequenceIndex);
+                currentData = currentData.substring(endSequenceIndex + 1);
 
-                String[] completedMessages = relavantData.split("\\)");
+                String[] completedMessages = relavantData.split(Constants.END_SEQUENCE);
                 for(int i=0; i<completedMessages.length; i++) {
                     String completedMessage = completedMessages[i];
 
-                    int colon = completedMessage.indexOf(":");
-                    if(colon > -1) { //now it is defintely a full message
-                        String subject = completedMessage.substring(0, colon);
-                        String message = completedMessage.substring(colon + 1);
+                    int splitSequenceIndex = completedMessage.indexOf(Constants.SPLIT_SEQUENCE);
+                    if(splitSequenceIndex > -1) { //now it is defintely a full message
+                        String subject = completedMessage.substring(0, splitSequenceIndex);
+                        String message = completedMessage.substring(splitSequenceIndex + Constants.SPLIT_SEQUENCE.length());
+                        String extraInfo = "";
 
-                        if(subject.startsWith("(")) {
-                            subject = subject.substring(1); //substring off "("
+                        if(subject.startsWith(Constants.START_SEQUENCE)) {
+                            subject = subject.substring(Constants.START_SEQUENCE.length()); //substring off "("
                         }
 
+                        if(subject.contains(Constants.SUBJECT_SEQUENCE)) {
+                            extraInfo = subject.substring(subject.indexOf(Constants.SUBJECT_SEQUENCE) + Constants.SUBJECT_SEQUENCE.length());
+                        }
 
-                        handleMessage(subject, message);
+                        handleMessage(subject, message, extraInfo);
                     }
                 }
             }
@@ -161,21 +170,47 @@ public class PVHost {
      * @param subject The subject of the message in string form.
      * @param message The body of the message.
      */
-    private void handleMessage(String subject, String message) {
+    private void handleMessage(String subject, String message, String extraInfo) {
         MessageType messageType = MessageType.fromString(subject);
         switch(messageType) {
-        case DIRECTORY_REQUEST: { //return a message with all contents of the directory separated by newlines
-                String[] paths = PVUtils.getFilesInDirectory(message, true);
-                String returnMessage = "";
-                for(String path : paths) {
-                    returnMessage += path + "\n";
+            case DIRECTORY_REQUEST: { //return a message with all contents of the directory separated by newlines
+                    String[] paths = PVUtils.getFilesInDirectory(message, true);
+                    String returnMessage = "";
+                    for(String path : paths) {
+                        returnMessage += path + "\n";
+                    }
+
+                    sendMessage(composeMessage(MessageType.DIRECTORY_REQUEST, returnMessage));
                 }
-                sendMessage(composeMessage(MessageType.DIRECTORY_REQUEST, returnMessage));
-            }
-            break;
-        default:
-            DriverStation.reportError("PVHost could not handle message of type \"" + messageType.getCode() + "\"!", false);
-            return;
+                break;
+            case LOAD: {
+                    if(!Files.exists(java.nio.file.Path.of(message))) {
+                        sendMessage(composeMessage(MessageType.LOAD, "ERR"));
+                        break;
+                    }
+
+                    try {
+                        sendMessage(composeMessage(MessageType.LOAD, Files.readString(java.nio.file.Path.of(message))));
+                    } catch(IOException ex) {
+                        sendMessage(composeMessage(MessageType.LOAD, "ERR"));
+                    }
+                }
+                break;
+            case SAVE: {
+                    String fileContents = message;
+                    java.nio.file.Path filePath = java.nio.file.Path.of(extraInfo);
+
+                    try {
+                        Files.writeString(filePath, fileContents);
+                        sendMessage(composeMessage(MessageType.SAVE, extraInfo, "OK"));
+                    } catch(IOException ex) {
+                        sendMessage(composeMessage(MessageType.SAVE, extraInfo, "ERR"));
+                    }
+                }
+                break;
+            default:
+                DriverStation.reportError("PVHost could not handle message of type \"" + messageType.getCode() + "\"!", false);
+                return;
         }
     }
 
@@ -185,7 +220,7 @@ public class PVHost {
      * @param message The body of the message.
      */
     private String composeMessage(MessageType subject, String message) {
-        return "(" + subject.getCode() + ":" + message + ")";
+        return Constants.START_SEQUENCE + subject.getCode() + Constants.SPLIT_SEQUENCE + message + Constants.END_SEQUENCE;
     }
 
     /**
@@ -195,6 +230,6 @@ public class PVHost {
      * @param message The body of the message.
      */
     private String composeMessage(MessageType subject, String subjectInfo, String message) {
-        return "(" + subject.getCode() + "-" + subjectInfo + ":" + message + ")";
+        return Constants.START_SEQUENCE + subject.getCode() + Constants.SUBJECT_SEQUENCE + subjectInfo + Constants.SPLIT_SEQUENCE + message + Constants.END_SEQUENCE;
     }
 }

@@ -15,4 +15,13 @@ package frc.robot;
 public final class Constants {
     public static final int
         SOCKET_BUFFER_SIZE = 128000;
+
+    /**
+     * Message Format Constants. These should exactly match those from the PathVisualizer code.
+     */
+    public static final String
+        START_SEQUENCE = "[",
+        END_SEQUENCE = "]",
+        SPLIT_SEQUENCE = ":::",
+        SUBJECT_SEQUENCE = "---";
 }

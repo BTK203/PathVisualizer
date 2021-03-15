@@ -46,11 +46,11 @@ public class RobotFileDialog extends JDialog {
      * Creates a new RobotFileDialog.
      * @param operation The mode to open files with. Can either be RobotFileDialog.SAVING or RobotFileDialog.READING
      */
-    public RobotFileDialog(JFrame parent, FileOperation operation) {
+    public RobotFileDialog(JFrame parent, FileOperation operation, String startingDirectory) {
         super(parent, true);
         setSize(Constants.DEFAULT_SAVE_DIALOG_SIZE);
         setTitle(operation == FileOperation.SAVE? "Save To Robot" : "Load From Robot");
-        fileSystem = null;
+        fileSystem = new RobotFileSystem(startingDirectory);
 
         fileOptions   = new ArrayList<JPanel>();
         lastClickTime = System.currentTimeMillis();
@@ -68,12 +68,11 @@ public class RobotFileDialog extends JDialog {
                 header.add(Util.boldify(new JLabel(operation == FileOperation.SAVE ? "Save File" : "Load File")));
 
                 //area where you put in a directory for it to search
-                String defaultDirectory = App.getManager().getPreference("defaultRobotRootDirectory", Constants.DEFAULT_ROBOT_ROOT_DIR);
                 JPanel directoryPanel = new JPanel();
                     directoryPanel.setLayout(new BoxLayout(directoryPanel, BoxLayout.X_AXIS));
                     directoryPanel.add(new JLabel("Directory: "));
 
-                    directoryBox = new JTextField(defaultDirectory);
+                    directoryBox = new JTextField(startingDirectory);
                         directoryBox.addActionListener(new ActionListener() {
                             public void actionPerformed(ActionEvent e) {
                                 populateList(directoryBox.getText());
@@ -105,7 +104,7 @@ public class RobotFileDialog extends JDialog {
                 contents.add(fileListPanel, BorderLayout.CENTER);
 
             //populate the file browser. This will generate the UI elements and place them where they need to go
-            populateList(defaultDirectory);
+            populateList(startingDirectory);
             
             //Area with the file name box and the Save / Load and Cancel buttons
             JPanel buttonPanel = new JPanel();
@@ -169,11 +168,7 @@ public class RobotFileDialog extends JDialog {
 
         new Thread(
             () -> {
-                if(fileSystem == null) {
-                    fileSystem = new RobotFileSystem(directory);
-                } else {
-                    fileSystem.setCurrentDirectory(directory);
-                }
+                fileSystem.setCurrentDirectory(directory);
                 String[] paths = fileSystem.onlyNames(fileSystem.getPaths()); //returns only the names of the files in the directory.
                 generateFileList(paths);
             }
@@ -203,6 +198,7 @@ public class RobotFileDialog extends JDialog {
         scrollPane.setBackground(Constants.WHITE);
         scrollPane.setBounds(fileListPanel.getBounds());
 
+        //path format: [file path]:[dir/file]
         for(String path : paths) {
             if(!path.contains(":")) {
                 continue;

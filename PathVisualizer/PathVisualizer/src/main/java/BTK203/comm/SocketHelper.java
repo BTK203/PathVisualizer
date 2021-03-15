@@ -58,26 +58,31 @@ public class SocketHelper {
                 }
 
                 //parse data and look for messages.
-                //messages formatted as such: "([subject]:[message])"
-                while(currentData.indexOf(")") > -1 && currentData.indexOf("(") > -1) {
+                //message formatted as such: "[start sequence] [subject] [subject sequence if there is one] [subject contents if applicable] [split sequence] [contents of message] [end sequence]"
+                while(currentData.indexOf(Constants.START_SEQUENCE) > -1 && currentData.indexOf(Constants.END_SEQUENCE) > -1) {
                     int
-                        openParenIndex = currentData.indexOf("("),
-                        closeParenIndex = currentData.indexOf(")");
-                        
-                    String relavantData = currentData.substring(openParenIndex, closeParenIndex);
-                    currentData = currentData.substring(closeParenIndex + 1);
+                        startSequenceIndex = currentData.indexOf(Constants.START_SEQUENCE),
+                        endSequenceIndex = currentData.indexOf(Constants.END_SEQUENCE);
+                    
+                    String relavantData = "";
+                    try {
+                        relavantData = currentData.substring(startSequenceIndex, endSequenceIndex);
+                    } catch(StringIndexOutOfBoundsException ex) {
+                        System.out.println("SIOOB Error! Data was VERY invalid!");
+                    }
+                    currentData = currentData.substring(endSequenceIndex + 1);
 
-                    String[] completedMessages = relavantData.split("\\)");
+                    String[] completedMessages = relavantData.split(Constants.END_SEQUENCE);
                     for(int i=0; i<completedMessages.length; i++) {
                         String completedMessage = completedMessages[i];
 
-                        int colon = completedMessage.indexOf(":");
-                        if(colon > -1) { //now it is defintely a full message
-                            String subject = completedMessage.substring(0, colon);
-                            String message = completedMessage.substring(colon + 1);
+                        int splitSequenceIndex = completedMessage.indexOf(Constants.SPLIT_SEQUENCE);
+                        if(splitSequenceIndex > -1) { //now it is defintely a full message
+                            String subject = completedMessage.substring(0, splitSequenceIndex);
+                            String message = completedMessage.substring(splitSequenceIndex + Constants.SPLIT_SEQUENCE.length());
 
-                            if(subject.startsWith("(")) {
-                                subject = subject.substring(1); //substring off "("
+                            if(subject.startsWith(Constants.START_SEQUENCE)) {
+                                subject = subject.substring(Constants.START_SEQUENCE.length()); //substring off the start sequence
                             }
 
                             handleMessage(subject, message);
@@ -98,24 +103,22 @@ public class SocketHelper {
         }
     }
 
-    /**
-     * Sends a message to the robot and returns the robot's response to the message if there is one.
-     * This method will block until either the response is received, or the operation times out.
-     * @param subject The subject of the message to send.
-     * @param message The body of the message to send.
-     * @return The robot's response to the message, or an empty String if it does not respond.
-     */
-    public String sendMessageAndGetResponse(MessageType subject, String message) {
+    public String sendMessageAndGetResponse(MessageType subject, String message, String extraInfo) {
         if(!getInitalizedAndConnected()) {
             return "";
         }
-
-        String formattedMessage = composeMessage(subject, message);
+        
+        String formattedMessage = "";
+        if(extraInfo.isEmpty()) {
+            formattedMessage = composeMessage(subject, message);
+        } else {
+            formattedMessage = composeMessage(subject, extraInfo, message);
+        }
         sendMessage(formattedMessage);
 
         String formattedSubject = "";
         try {
-            formattedSubject = formattedMessage.split(":")[0].substring(1);
+            formattedSubject = formattedMessage.split(Constants.SPLIT_SEQUENCE)[0].substring(1);
         } catch(IndexOutOfBoundsException ex) {
             System.out.println("sendMessageAndGetResponse() encountered an internal error.");
             return "";
@@ -130,10 +133,27 @@ public class SocketHelper {
                 unclaimedMessages.remove(formattedSubject);
                 return returnMessage;
             }
+
+            try {
+                Thread.sleep(Constants.UPDATE_RATE);
+            } catch(InterruptedException ex) {
+                ex.printStackTrace();
+            }
         }
 
         System.out.println("sendMessageAndGetResponse() timed out.");
         return "";
+    }
+
+    /**
+     * Sends a message to the robot and returns the robot's response to the message if there is one.
+     * This method will block until either the response is received, or the operation times out.
+     * @param subject The subject of the message to send.
+     * @param message The body of the message to send.
+     * @return The robot's response to the message, or an empty String if it does not respond.
+     */
+    public String sendMessageAndGetResponse(MessageType subject, String message) {
+        return sendMessageAndGetResponse(subject, message, "");
     }
 
     /**
@@ -196,25 +216,23 @@ public class SocketHelper {
 
     /**
      * Creates a properly formatted String message for the robot.
-     * Format: ([subject]:[message])
      * @param subject The subject of the message.
      * @param message The contents of the message.
      * @return A properly formatted message.
      */
     private String composeMessage(MessageType subject, String message) {
-        return "(" + subject.getCode() + ":" + message + ")";
+        return Constants.START_SEQUENCE + subject.getCode() + Constants.SPLIT_SEQUENCE + message + Constants.END_SEQUENCE;
     }
 
     /**
      * Creates a properly formatted String message for the robot.
-     * Format: ([subject]-[subjectinfo]:message)
      * @param subject The subject of the message
      * @param subjectInfo Additional info needed for the robot to carry out the task depicted by the message
      * @param message The contents of the message.
      * @return A properly formatted String message.
      */
     private String composeMessage(MessageType subject, String subjectInfo, String message) {
-        return "(" + subject.getCode() + "-" + subjectInfo + ":" + message + ")";
+        return Constants.START_SEQUENCE + subject.getCode() + Constants.SUBJECT_SEQUENCE + subjectInfo + Constants.SPLIT_SEQUENCE + message + Constants.END_SEQUENCE;
     }
 
     /**

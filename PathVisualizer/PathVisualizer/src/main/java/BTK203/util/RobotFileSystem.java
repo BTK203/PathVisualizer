@@ -16,7 +16,8 @@ public class RobotFileSystem {
      * @param directory The absolute directory to search first.
      */
     public RobotFileSystem(String directory) {
-        setCurrentDirectory(directory);
+        currentDirectory = directory;
+        paths = EMPTY;
     }
 
     /**
