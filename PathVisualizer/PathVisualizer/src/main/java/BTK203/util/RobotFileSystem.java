@@ -46,7 +46,9 @@ public class RobotFileSystem {
     public String[] onlyNames(String[] paths) {
         String[] nameArray = new String[paths.length];
         for(int i=0; i<paths.length; i++) {
-            nameArray[i] = paths[i].substring(paths[i].lastIndexOf("\\") + 1);
+            String name = paths[i].substring(paths[i].lastIndexOf("/") + 1); //works when client is running on Unix. If no forward slash found, will return the old string.
+            name = paths[i].substring(paths[i].lastIndexOf("\\") + 1); //works when client is running on windows. If no back slash found, will return the old string.
+            nameArray[i] = name;
         }
 
         return nameArray;
