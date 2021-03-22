@@ -17,7 +17,7 @@ import BTK203.util.Path;
 import BTK203.util.Point2D;
 
 /**
- * This class' only job is basically to sit in a chair and pass method calls
+ * This class' only job is basically to sit around and pass method calls
  * around. And also run a timer. And also start the program.
  */
 public class PathVisualizerManager {
@@ -25,6 +25,7 @@ public class PathVisualizerManager {
     private SocketHelper socketHelper;
     private HashMap<String, String> preferences;
     private HashMap<String, Integer> names;
+    private boolean updatedBefore;
 
     /**
      * Initalizes all needed components of the program.
@@ -35,6 +36,7 @@ public class PathVisualizerManager {
         readPreferences();
 
         names = new HashMap<String, Integer>();
+        updatedBefore = false;
 
         //resolve default IP address and port. Keep this section of code below the call to readPreferences().
         String defaultIPAddress = getPreference("defaultIPAddress", "10.36.95.2");
@@ -336,6 +338,11 @@ public class PathVisualizerManager {
      */
     private void update() {
         socketHelper.update();
+        if(updatedBefore && !socketHelper.getUpdated()) {
+            socketHelper.startConnectingTo(gui.getDesiredIPAddress(), gui.getDesiredPort());
+        }
+        
+        updatedBefore = socketHelper.getUpdated();
         gui.updateSocketStatus(socketHelper.getConnecting(), socketHelper.getInitalizedAndConnected());
     }
 }

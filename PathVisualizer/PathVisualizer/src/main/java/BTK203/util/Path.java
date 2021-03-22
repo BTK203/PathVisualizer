@@ -11,6 +11,7 @@ import java.awt.Color;
  * Represents a Path that can be rendered on the screen.
  */
 public class Path implements IRenderable {
+    private static final int MAX_ALLOWED_NULL_POINTS = 5;
     private static float currentHue = 0;
 
     private Point2D[] points;
@@ -132,10 +133,14 @@ public class Path implements IRenderable {
     public static Path fromString(String string, String name) {
         String[] pointStrings = string.split("\n");
         Point2D[] points = new Point2D[pointStrings.length];
+        int nullPoints = 0;
         for(int p=0; p<points.length; p++) {
             points[p] = Point2D.fromString(pointStrings[p]);
             if(points[p] == null) {
-                return null;
+                nullPoints++;
+                if(nullPoints > MAX_ALLOWED_NULL_POINTS) {
+                    return null;
+                }
             }
         }
 

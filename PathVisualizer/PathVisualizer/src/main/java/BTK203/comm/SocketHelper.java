@@ -27,6 +27,7 @@ public class SocketHelper {
         connecting,
         initalized;
     
+    private long lastUpdateTime;
     private HashMap<String, String> unclaimedMessages;
     private String currentData;
 
@@ -37,6 +38,7 @@ public class SocketHelper {
      */
     public SocketHelper(String address, int port) {
         startConnectingTo(address, port);
+        lastUpdateTime = 0;
         unclaimedMessages = new HashMap<String, String>();
         currentData = "";
     }
@@ -80,12 +82,17 @@ public class SocketHelper {
                         if(splitSequenceIndex > -1) { //now it is defintely a full message
                             String subject = completedMessage.substring(0, splitSequenceIndex);
                             String message = completedMessage.substring(splitSequenceIndex + Constants.SPLIT_SEQUENCE.length());
+                            String info = "";
 
                             if(subject.startsWith(Constants.START_SEQUENCE)) {
                                 subject = subject.substring(Constants.START_SEQUENCE.length()); //substring off the start sequence
                             }
 
-                            handleMessage(subject, message);
+                            if(subject.contains(Constants.SUBJECT_SEQUENCE)) {
+                                info = subject.substring(subject.indexOf(Constants.SUBJECT_SEQUENCE) + Constants.SUBJECT_SEQUENCE.length());
+                            }
+
+                            handleMessage(subject, message, info);
                         }
                     }
                 }
@@ -187,6 +194,10 @@ public class SocketHelper {
         return false;
     }
 
+    public boolean getUpdated() {
+        return System.currentTimeMillis() - lastUpdateTime < Constants.STABLE_UPDATE_THRESHOLD;
+    }
+
     /**
      * Tries to connect the socket to the robot in a separate thread, and keeps trying even when it times out.
      */
@@ -286,9 +297,11 @@ public class SocketHelper {
      * @param subject The subject of the message (part after open paren but before colon)
      * @param message The body of the message (part after colon but before close paren)
      */
-    private void handleMessage(String subject, String message) {
+    private void handleMessage(String subject, String message, String info) {
         MessageType type = MessageType.fromString(subject); //the type of message
         Object contents = null; //the information to pass along to the Manager to forward to another system.
+
+        lastUpdateTime = System.currentTimeMillis();
 
         switch(type) {
             case POSITION:
@@ -296,7 +309,7 @@ public class SocketHelper {
                 break;
             case PATH: {
                     try {
-                        String pathName = subject.split("-")[1];
+                        String pathName = subject.split(Constants.SUBJECT_SEQUENCE)[1];
                         contents = Path.fromString(message, pathName);
                     } catch(IndexOutOfBoundsException ex) {
                         System.out.println("Error parsing Path Message! Message was likely missing a \"-\"");

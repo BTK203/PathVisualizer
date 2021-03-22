@@ -61,7 +61,8 @@ public class Constants {
         UPDATE_RATE = 50, //50 ms or 20 hz
         DOUBLE_CLICK_TIME = 400,
         PING_RATE = 500,
-        MESSAGE_TIMEOUT = 5000; //time for robot to respond before processes give up (in ms).
+        MESSAGE_TIMEOUT = 5000, //time for robot to respond before processes give up (in ms).
+        STABLE_UPDATE_THRESHOLD = 250;
 
     /**
      * Settings (debug)
