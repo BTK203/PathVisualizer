@@ -47,12 +47,15 @@ public class SocketHelper {
      * Updates the SocketHelper.
      */
     public void update() {
+        System.out.println("updating");
         if(getInitalizedAndConnected()) {
             try {
                 //add previously received data to currentData.
                 byte[] buffer = new byte[Constants.SOCKET_BUFFER_SIZE];
                 socket.getInputStream().read(buffer);
                 currentData += new String(buffer);
+
+                System.out.println("asd " + currentData);
 
                 //now that the buffer is cleared, if the user doesn't want to see live data, they will not.
                 if(!App.getManager().dataIsLive()) {
@@ -202,27 +205,40 @@ public class SocketHelper {
      * Tries to connect the socket to the robot in a separate thread, and keeps trying even when it times out.
      */
     private void attemptToConnectSocket() {
-        initalized = false;
-        this.connecting = true;
-        new Thread(() -> {
-            while(true) {
+        if(!connecting) {
+            String currentAddr = address;
+            int currentPort = port;
+
+            if(!initalized && socket != null) {
                 try {
-                    socket = new Socket(InetAddress.getByName(address), port);
-                    socket.setSoTimeout(Constants.SOCKET_TIMEOUT);
-                    initalized = true;
-                    break;
-                } catch(UnknownHostException ex) {
-                    printUnknownHostExceptionMessage(ex, address);
-                } catch(ConnectException ex) {       //connection timed out.
-                } catch(NoRouteToHostException ex) { //not on a network. We don't care about this one because we want it to connect as soon as it is able.
+                    socket.close();
                 } catch(IOException ex) {
                     printIOExceptionMessage(ex);
-                    break;
                 }
             }
 
-            connecting = false;
-        }).start();
+            initalized = false;
+            this.connecting = true;
+            new Thread(() -> {
+                while(currentAddr.equals(address) && currentPort == port) {
+                    try {
+                        socket = new Socket(InetAddress.getByName(address), port);
+                        socket.setSoTimeout(Constants.SOCKET_TIMEOUT);
+                        initalized = true;
+                        break;
+                    } catch(UnknownHostException ex) {
+                        printUnknownHostExceptionMessage(ex, address);
+                    } catch(ConnectException ex) {       //connection timed out.
+                    } catch(NoRouteToHostException ex) { //not on a network. We don't care about this one because we want it to connect as soon as it is able.
+                    } catch(IOException ex) {
+                        printIOExceptionMessage(ex);
+                        break;
+                    }
+                }
+
+                connecting = false;
+            }).start();
+        }
     }
 
     /**

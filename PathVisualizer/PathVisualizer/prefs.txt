@@ -1,6 +1,6 @@
-defaultPort:"5963"
+defaultPort:"3695"
 defaultRobotLoadDirectory:"/home/lvuser"
 defaultOpenFilePath:"C:\Users\foximus3695\Desktop"
-defaultIPAddress:"10.36.95.2"
+defaultIPAddress:"127.0.0.1"
 defaultSaveFilePath:"C:\Users\foximus3695\Desktop"
 defaultRobotSaveDirectory:"/home/lvuser"
