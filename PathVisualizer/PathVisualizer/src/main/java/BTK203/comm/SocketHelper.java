@@ -47,7 +47,6 @@ public class SocketHelper {
      * Updates the SocketHelper.
      */
     public void update() {
-        System.out.println("updating");
         if(getInitalizedAndConnected()) {
             try {
                 //add previously received data to currentData.
