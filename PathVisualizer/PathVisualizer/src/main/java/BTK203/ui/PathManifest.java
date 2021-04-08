@@ -1,12 +1,12 @@
 package BTK203.ui;
 
+import java.awt.Dimension;
 import java.util.ArrayList;
 import javax.swing.BoxLayout;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import BTK203.Constants;
 import BTK203.util.IRenderable;
-import BTK203.util.Path;
 import BTK203.util.Util;
 
 /**
@@ -25,9 +25,6 @@ public class PathManifest extends JPanel {
         setPreferredSize(Constants.DEFAULT_MANIFEST_SIZE);
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         widgets = new ArrayList<RenderableWidget>();
-
-        JLabel header = Util.boldify(new JLabel("Paths"));
-        add(header);
     }
 
     /**
@@ -37,8 +34,8 @@ public class PathManifest extends JPanel {
     public void addWidget(RenderableWidget widget) {
         widgets.add(widget);
         add(widget);
-
-        validate(); //this forces an immediate repainting of the window. Without this line, the new widget does not render until the window is manual resized.
+        validate(); //this forces an immediate repainting of the window. Without this line, the new widget does not render until the window is manually resized.
+        resolveSize();
     }
 
     /**
@@ -49,7 +46,7 @@ public class PathManifest extends JPanel {
         if(widgets.contains(widget)) {
             widgets.remove(widget);
             remove(widget);
-            repaint();
+            resolveSize();
         }
     }
 
@@ -91,5 +88,30 @@ public class PathManifest extends JPanel {
         }
 
         return array;
+    }
+
+    /**
+     * Sets the size of the widget to be big enough for all widgets to fit comfortably.
+     */
+    private void resolveSize() {
+        //find the width of the widest widget so we know what to set the manifest size to.
+        int biggestWidth = Integer.MIN_VALUE;
+        for(int i=0; i<widgets.size(); i++) {
+            if(widgets.get(i).getWidth() > biggestWidth) {
+                biggestWidth = widgets.get(i).getWidth();
+            }
+        }
+
+        int newWidth = biggestWidth + Constants.MANIFEST_MARGIN;
+        if(newWidth < 0) {
+            newWidth = (int) Constants.DEFAULT_MANIFEST_SIZE.getWidth();
+        }
+
+        Dimension newSize = new Dimension(newWidth, getParent().getHeight());
+        setPreferredSize(newSize);
+        setMaximumSize(newSize);
+        setMinimumSize(newSize);
+
+        revalidate();
     }
 }

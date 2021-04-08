@@ -1,15 +1,12 @@
 package BTK203.ui;
 
 import BTK203.util.IRenderable;
-import BTK203.util.Path;
 import BTK203.util.Point2D;
-import BTK203.util.Position;
 import BTK203.util.Rectangle;
 import BTK203.Constants;
 import java.awt.Graphics;
 import javax.swing.JPanel;
 import java.awt.BorderLayout;
-import java.awt.Color;
 import java.util.ArrayList;
 
 /**
@@ -97,6 +94,10 @@ public class Visualizer extends JPanel {
                     for(int k=1; k<points.length; k++) {
                         Point2D p1 = points[k-1];
                         Point2D p2 = points[k];
+
+                        if(p1 == null || p2 == null) {
+                            continue;
+                        }
                         
                         //define locations of points in image space
                         double 
@@ -173,7 +174,15 @@ public class Visualizer extends JPanel {
         for(int i=0; i<renderables.size(); i++) {
             if(renderables.get(i).isVisible()) {
                 Point2D[] points = renderables.get(i).getPoints();
+                if(points == null) {
+                    continue;
+                }
+
                 for(int k=0; k<points.length; k++) {
+                    if(points[k] == null) {
+                        continue;
+                    }
+
                     double
                         x = points[k].getX(),
                         y = points[k].getY();

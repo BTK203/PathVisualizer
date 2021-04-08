@@ -7,14 +7,17 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
+
 import BTK203.comm.SocketHelper;
+import BTK203.enumeration.FileOperation;
+import BTK203.enumeration.MessageType;
 import BTK203.ui.PathVisualizerGUI;
 import BTK203.util.IRenderable;
 import BTK203.util.Path;
 import BTK203.util.Point2D;
 
 /**
- * This class' only job is basically to sit in a chair and pass method calls
+ * This class' only job is basically to sit around and pass method calls
  * around. And also run a timer. And also start the program.
  */
 public class PathVisualizerManager {
@@ -22,6 +25,8 @@ public class PathVisualizerManager {
     private SocketHelper socketHelper;
     private HashMap<String, String> preferences;
     private HashMap<String, Integer> names;
+    private boolean updatedBefore;
+    private long lastReconnectTime;
 
     /**
      * Initalizes all needed components of the program.
@@ -32,6 +37,8 @@ public class PathVisualizerManager {
         readPreferences();
 
         names = new HashMap<String, Integer>();
+        updatedBefore = false;
+        lastReconnectTime = 0;
 
         //resolve default IP address and port. Keep this section of code below the call to readPreferences().
         String defaultIPAddress = getPreference("defaultIPAddress", "10.36.95.2");
@@ -52,10 +59,25 @@ public class PathVisualizerManager {
         Timer timer = new Timer();
         TimerTask updateTask = new TimerTask() {
             public void run() {
-                update();
+                try {
+                    update();
+                } catch(Exception ex) {
+                    if(Constants.SHOW_LOWKEY_ERRORS) {
+                        System.err.println("Process encountered an error!");
+                        ex.printStackTrace();
+                    }
+                }
             }
         };
         timer.scheduleAtFixedRate(updateTask, 1, Constants.UPDATE_RATE);
+    }
+
+    /**
+     * Returns the Manager's SocketHelper.
+     * @return A SocketHelper.
+     */
+    public SocketHelper getSocketHelper() {
+        return socketHelper;
     }
 
     /**
@@ -115,19 +137,116 @@ public class PathVisualizerManager {
      * Prompts the user to select a path to save and a location to save it to.
      */
     public void saveRenderable() {
-        gui.promptRenderableToSave();
+        gui.promptSaveRenderable();
     }
 
     /**
-     * Updates the robot's position on the Visualizer.
+     * Prompts the user to save a file to the robot.
      */
-    public void updateRobotPosition(Point2D newPosition) {
-        gui.updateRobotPosition(newPosition);
+    public void doRobotFileOperation(FileOperation operation) {
+        //resolve from preferences the last file location that the user used. This will be the starting location for the directory
+        String startingDirectory = "/";
+        if(operation == FileOperation.LOAD) {
+            startingDirectory = getPreference("defaultRobotLoadDirectory", Constants.DEFAULT_ROBOT_ROOT_DIR);
+        } else {
+            startingDirectory = getPreference("defaultRobotSaveDirectory", Constants.DEFAULT_ROBOT_ROOT_DIR);
+        }
+
+        //if the user wants a save, we need to know what path to save
+        IRenderable thingToSave = null;
+        if(operation == FileOperation.SAVE) {
+            thingToSave = gui.promptRenderableToSave();
+
+            if(thingToSave == null) {
+                return;
+            }
+        }
+
+        final IRenderable finalThingToSave = thingToSave; //this is needed because java complains about using thingToSave in the Thread
+
+        //get the file path from the user and return if its wack
+        String filePath = gui.runRobotFileDialog(operation, startingDirectory);
+        if(filePath == null || !filePath.contains("/") || filePath.equals("")) {
+            return;
+        }
+
+        //saves last choice to preferences for convenience
+        String directoryName = filePath.substring(0, filePath.lastIndexOf("/"));
+        if(operation == FileOperation.LOAD) {
+            setPreference("defaultRobotLoadDirectory", directoryName);
+        } else {
+            setPreference("defaultRobotSaveDirectory", directoryName);
+        }
+
+        //do the operation now (separate thread because this involves sendMessageAndGetResponse)
+        new Thread(
+            () -> {
+                if(operation == FileOperation.LOAD) {
+                    String fileName = "Robot: " + filePath.substring(filePath.lastIndexOf("/") + 1);
+                    String pathString = socketHelper.sendMessageAndGetResponse(MessageType.LOAD, filePath);
+                    
+                    if(pathString.isEmpty()) {
+                        return;
+                    }
+
+                    if(pathString.contains("ERR")) {
+                        gui.showGeneralAlert("An Error occurred while grabbing the file.");
+                        return;
+                    }
+
+                    Path newPath = Path.fromString(pathString, fileName);
+                    if(newPath == null) {
+                        gui.showGeneralAlert("Invalid File!");
+                        return;
+                    }
+
+                    gui.putPath(newPath);
+                } else { //FileOperation.SAVE
+                    if(finalThingToSave != null) {
+                        String response = socketHelper.sendMessageAndGetResponse(MessageType.SAVE, finalThingToSave.toString(), filePath);
+                        if(!response.equals("OK")) {
+                            gui.showGeneralAlert("An Error occurred while saving \"" + finalThingToSave.getName() + "\" To the robot.");
+                        }
+                    }
+                }
+            }
+        ).start();
     }
 
-    public void renderPathWithName(Path path, String name) {
-        String uniqueName = getNextName(name);
-        gui.putPath(path, uniqueName);
+    /**
+     * Forwards data from the robot to its appropriate location for handling.
+     * The value of contents must correlate with the value of subject.
+     * Quick reference (value of subject : type of contents)
+     * PATH : Path
+     * POSITION: Point2D
+     * @param subject The subject of the message that the robot sent
+     * @param contents The contents of the message, ready for handling.
+     */
+    public void forwardData(MessageType subject, Object contents) {
+        switch(subject) {
+        case PATH: {
+                if(contents instanceof Path) {
+                    Path path = (Path) contents;
+                    path.setName(getNextName(path.getName()));
+                    gui.putPath(path);
+                } else {
+                    System.out.println("Manager tried to forward path data to GUI, but it was not a path!"); //hopefully this code is never run, but its nice to have
+                    System.out.println("Contents: " + contents.toString());
+                }
+            }            
+            break;
+        case POSITION: {
+                if(contents instanceof Point2D) {
+                    gui.updateRobotPosition((Point2D) contents);
+                } else {
+                    System.out.println("Manager tried to forward position to GUI, but it was not a Point2D!"); //same here
+                    System.out.println("Contents: " + contents.toString());
+                }
+            }
+            break;
+        default:
+            return;
+        }
     }
 
     /**
@@ -148,7 +267,6 @@ public class PathVisualizerManager {
      * Saves the user preferences to PREFERENCES_LOCATION
      */
     public void savePreferences() {
-        System.out.println("Saving Preferences...");
         String fileContents = "";
         Iterator<String> keys = preferences.keySet().iterator();
         if(keys != null) {

@@ -12,4 +12,16 @@ package frc.robot;
  * <p>It is advised to statically import this class (or one of its inner classes) wherever the
  * constants are needed, to reduce verbosity.
  */
-public final class Constants {}
+public final class Constants {
+    public static final int
+        SOCKET_BUFFER_SIZE = 128000;
+
+    /**
+     * Message Format Constants. These should exactly match those from the PathVisualizer code.
+     */
+    public static final String
+        START_SEQUENCE = "[",
+        END_SEQUENCE = "]",
+        SPLIT_SEQUENCE = ":::",
+        SUBJECT_SEQUENCE = "---";
+}

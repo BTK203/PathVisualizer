@@ -34,7 +34,7 @@ public class PathChooser extends JDialog {
 
     private IRenderable result;
     
-    public PathChooser(JFrame parent, IRenderable[] options, String[] names, boolean pathsOnly) {
+    public PathChooser(JFrame parent, IRenderable[] options, boolean pathsOnly) {
         super(parent, true);
         setTitle("Save");
         setSize(Constants.DEFAULT_SAVE_DIALOG_SIZE);
@@ -43,11 +43,6 @@ public class PathChooser extends JDialog {
         optionList = new ArrayList<IRenderable>();
         radioButtons = new ArrayList<JRadioButton>();
 
-        if(options.length != names.length) {
-            System.out.println("PathChooser ERROR: length of \"options\" and \"names\" do not match, so chooser will not render!");
-            return;
-        }
-
         // generate a list of options for the user to choose from.
         ArrayList<IRenderable> optionsList = new ArrayList<IRenderable>();
         ArrayList<String> namesList = new ArrayList<String>();
@@ -55,7 +50,7 @@ public class PathChooser extends JDialog {
         // non-paths
         for (int i=0; i<options.length; i++) {
             IRenderable option = options[i];
-            String name = names[i];
+            String name = option.getName();
             if (pathsOnly) {
                 if (option.getPoints().length > 1) {
                     optionsList.add(option);

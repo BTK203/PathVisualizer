@@ -1,0 +1,6 @@
+defaultPort:"3695"
+defaultRobotLoadDirectory:"D:/_Users/Brach/projects/FRC/PathVisualizer/PathVisualizer"
+defaultOpenFilePath:"C:\Users\foximus3695\Desktop"
+defaultIPAddress:"127.0.0.1"
+defaultSaveFilePath:"C:\Users\foximus3695\Desktop"
+defaultRobotSaveDirectory:"D:/_Users/Brach/projects/FRC/Hyperdrive/Hyperdrive/src/main/java/frc/robot"

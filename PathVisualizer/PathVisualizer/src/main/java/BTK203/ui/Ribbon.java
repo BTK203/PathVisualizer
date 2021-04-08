@@ -3,10 +3,13 @@ package BTK203.ui;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JLabel;
+import javax.swing.JMenuItem;
 import javax.swing.JPanel;
+import javax.swing.JPopupMenu;
 import javax.swing.JTextField;
 import javax.swing.JToggleButton;
 import BTK203.App;
+import BTK203.enumeration.FileOperation;
 import BTK203.util.Util;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
@@ -18,6 +21,14 @@ public class Ribbon extends JPanel {
     private JTextField 
         ipAddress,
         ipPort;
+
+    private JPopupMenu
+        loadMenu,
+        saveMenu;
+
+    private JButton
+        loadButton,
+        saveButton;
 
     private SocketWidget socketStatus;
 
@@ -33,25 +44,67 @@ public class Ribbon extends JPanel {
         JPanel buttonPanel = new JPanel();
             buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.X_AXIS));
 
-            JButton loadFromFile = new JButton("Load");
-                loadFromFile.addActionListener(new ActionListener() {
+            //load button menu (load from file, load from robot)
+            loadMenu = new JPopupMenu();
+                JMenuItem loadFromFile = new JMenuItem("From Computer");
+                    loadFromFile.addActionListener(new ActionListener() {
+                        public void actionPerformed(ActionEvent e) {
+                            App.getManager().loadPath();
+                        }
+                    });
+                    
+                    loadMenu.add(loadFromFile);
+
+                JMenuItem loadFromRobot = new JMenuItem("From Robot");
+                    loadFromRobot.addActionListener(new ActionListener() {
+                        public void actionPerformed(ActionEvent e) {
+                            App.getManager().doRobotFileOperation(FileOperation.LOAD);
+                        }
+                    });
+
+                    loadMenu.add(loadFromRobot);
+
+            //save button menu (save to file, save to robot)
+            saveMenu = new JPopupMenu();
+                JMenuItem saveToFile = new JMenuItem("To Computer");
+                    saveToFile.addActionListener(new ActionListener() {
+                        public void actionPerformed(ActionEvent e) {
+                            App.getManager().saveRenderable();
+                        }
+                    });
+
+                    saveMenu.add(saveToFile);
+
+                JMenuItem saveToRobot = new JMenuItem("To Robot");
+                    saveToRobot.addActionListener(new ActionListener() {
+                        public void actionPerformed(ActionEvent e) {
+                            App.getManager().doRobotFileOperation(FileOperation.SAVE);
+                        }
+                    });
+
+                    saveMenu.add(saveToRobot);
+
+            //buttons that trigger the menus
+            loadButton = new JButton("Load");
+                loadButton.addActionListener(new ActionListener() {
                     public void actionPerformed(ActionEvent e) {
-                        App.getManager().loadPath();
+                        loadMenu.show(loadButton, 0, 0);
                     }
                 });
+
+                buttonPanel.add(loadButton);
+
+            saveButton = new JButton("Save");
+                saveButton.addActionListener(new ActionListener() {
+                    public void actionPerformed(ActionEvent e) {
+                        saveMenu.show(saveButton, 0, 0);
+                    }
+                });
+
+                buttonPanel.add(saveButton);
                 
-                buttonPanel.add(loadFromFile);
-
-            JButton saveToFile = new JButton("Save");
-                saveToFile.addActionListener(new ActionListener() {
-                    public void actionPerformed(ActionEvent e) {
-                        App.getManager().saveRenderable();
-                    }
-                });
-
-                buttonPanel.add(saveToFile);
-            
             add(buttonPanel);
+
 
         //socket stuff
         JPanel socketPanel = new JPanel();
