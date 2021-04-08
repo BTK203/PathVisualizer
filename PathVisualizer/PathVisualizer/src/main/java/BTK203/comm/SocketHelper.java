@@ -54,8 +54,6 @@ public class SocketHelper {
                 socket.getInputStream().read(buffer);
                 currentData += new String(buffer);
 
-                System.out.println("asd " + currentData);
-
                 //now that the buffer is cleared, if the user doesn't want to see live data, they will not.
                 if(!App.getManager().dataIsLive()) {
                     currentData = "";
